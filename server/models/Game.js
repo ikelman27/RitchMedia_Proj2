@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
 
 let GameModel = {};
-
+const _ = require('underscore');
 const convertId = mongoose.Types.ObjectId;
 const setName = (name) => _.escape(name).trim();
 
@@ -65,6 +65,7 @@ const GameSchema = new mongoose.Schema({
     type: String,
     required: true,
     trim: true,
+    set: setName,
   },
 
   rounds: [RoundSchema],
@@ -110,8 +111,8 @@ GameSchema.statics.getIntros = (id, callback) => GameModel.aggregate([{
 // { _id: {$match:}, itemCount: {$size: '$rounds'}}}]).exec(callback);
 
 GameSchema.statics.getQuiz = (id, callback) => GameModel.findById(id,
-  'name rounds.question rounds.answer1 rounds.answer2' +
-  'rounds.answer3 rounds.answer4 creator').exec(callback);
+'name rounds.question rounds.answer1 rounds.answer2 rounds.answer3 \n' +
+'rounds.answer4 creator').exec(callback);
 
 GameSchema.statics.findByOwner = (ownerId, callback) => {
   const search = {

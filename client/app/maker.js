@@ -120,7 +120,7 @@ const DomoForm = (props) => {
 
 const addGame = (e) => {
     e.preventDefault();
-    //console.log($("#makerForm").serialize());
+    console.log($("#makerForm").serialize());
     sendAjax('POST', '/createGame',  $("#makerForm").serialize(), function(param){
        console.log("created game");
         //loadDomosFromServer();

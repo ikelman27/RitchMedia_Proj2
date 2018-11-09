@@ -24,7 +24,7 @@ const createGame = (req, res) => {
 
     });
   }
-  // console.log(roundData);
+  console.log(roundData);
 
 
   const game = {
@@ -146,7 +146,8 @@ const checkAnswers = (req, res) => {
       console.log(req.query[ans]);
       console.log(docs.rounds[i - 1].result);
       if (req.query[ans] !== undefined) {
-        if (req.query[ans] == docs.rounds[i - 1].result) {
+        if (String(req.query[ans]) === String(docs.rounds[i - 1].result)) {
+          console.log('test');
           score++;
         }
       }
