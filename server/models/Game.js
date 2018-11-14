@@ -1,3 +1,5 @@
+
+
 const mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
 
@@ -5,6 +7,43 @@ let GameModel = {};
 const _ = require('underscore');
 const convertId = mongoose.Types.ObjectId;
 const setName = (name) => _.escape(name).trim();
+
+
+const PlaySchema = new mongoose.Schema({
+
+  game: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'Game',
+  },
+
+  player: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'Account',
+  },
+
+  playerName: {
+    type: String,
+    trim: true,
+    default: 'unknown',
+  },
+
+  attemptsTaken: {
+    type: Number,
+    default: 0,
+  },
+
+  attemptDate: {
+    type: Date,
+    default: Date.now,
+  },
+
+  scores: {
+    type: [Number],
+  },
+
+
+});
+
 
 const RoundSchema = new mongoose.Schema({
   question: {
@@ -55,6 +94,7 @@ const RoundSchema = new mongoose.Schema({
     default: Date.now,
   },
 
+
 });
 
 
@@ -76,15 +116,36 @@ const GameSchema = new mongoose.Schema({
     ref: 'Account',
   },
 
+  creatorUsername: {
+    type: String,
+    trim: true,
+    default: 'unknown',
+  },
+
   createdData: {
     type: Date,
     default: Date.now,
   },
 
+  maxAttempts: {
+    type: Number,
+    default: -1,
+  },
+
+  attempts: {
+    type: [PlaySchema],
+  },
+
+
 });
 
 GameSchema.statics.getAnswers = (id, callback) =>
 GameModel.findById(id, 'rounds.result').exec(callback);
+
+
+GameSchema.statics.getAllAttemtps = (id, callback) => 
+GameModel.findById(id, 'attempts').exec(callback);
+
 
 /*
 GameSchema.statics.updateGame = (id, newGame, callback) => {
@@ -105,14 +166,15 @@ GameSchema.statics.getIntros = (id, callback) => GameModel.aggregate([{
       $size: '$rounds',
     },
     creator: '$creator',
+    creatorUsername: '$creatorUsername',
   },
 }]).exec(callback);
 // return GameModel.aggregate([{$project:
 // { _id: {$match:}, itemCount: {$size: '$rounds'}}}]).exec(callback);
 
 GameSchema.statics.getQuiz = (id, callback) => GameModel.findById(id,
-'name rounds.question rounds.answer1 rounds.answer2 rounds.answer3 \n' +
-'rounds.answer4 creator').exec(callback);
+'name creator rounds.question rounds.answer1 rounds.answer2 rounds.answer3 \n' +
+'rounds.answer4 creator attempts maxAttempts').exec(callback);
 
 GameSchema.statics.findByOwner = (ownerId, callback) => {
   const search = {

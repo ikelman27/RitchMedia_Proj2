@@ -29,10 +29,24 @@ var MakerComponent = function (_React$Component) {
             _this.edit = true;
             _this.title = props.data.name;
         }
+
+        _this.deleteIndex = -1;
+
         _this.onAddChild = function () {
             //console.log( $("#makerForm").serialize());
             _this.setState({
                 numChildren: _this.state.numChildren + 1
+            });
+            _this.deleteIndex = -1;
+        };
+
+        _this.removeChild = function (loc) {
+
+            console.log(" location " + loc);
+
+            _this.deleteIndex = loc;
+            _this.setState({
+                numChildren: _this.state.numChildren
             });
         };
         return _this;
@@ -44,9 +58,26 @@ var MakerComponent = function (_React$Component) {
             var children = [];
             if (!this.edit) {
 
+                var deleteChild = false;
+
                 for (var i = 0; i < this.state.numChildren; i++) {
-                    children.push(React.createElement(Question, { key: i, number: i }));
+                    //console.log(this.state.numChildren);
+                    //console.log(i +"   " + this.deleteIndex);
+                    if (this.deleteIndex === i) {
+                        deleteChild = true;
+                        console.log('test');
+                        //children.splice(this,this.deleteIndex, 1);
+                        //this.deleteIndex = -1;
+                        // i--;
+                    } else {
+                        children.push(React.createElement(Question, { key: i, number: i, deleteQuestion: this.removeChild }));
+                    }
                 };
+
+                if (deleteChild) {
+                    this.state.numChildren--;
+                    this.deleteIndex = -1;
+                }
 
                 return React.createElement(
                     Maker,
@@ -127,7 +158,15 @@ var addGame = function addGame(e) {
     console.log($("#makerForm").serialize());
     sendAjax('POST', '/createGame', $("#makerForm").serialize(), function (param) {
         console.log("created game");
-        //loadDomosFromServer();
+        ReactDOM.render(React.createElement(
+            "div",
+            null,
+            React.createElement(
+                "h2",
+                null,
+                " Created a new game "
+            )
+        ), document.querySelector("#domos"));
     });
 };
 
@@ -136,7 +175,15 @@ var updateGame = function updateGame(e) {
     //console.log($("#makerForm").serialize());
     sendAjax('POST', '/updateGame', $("#makerForm").serialize(), function (param) {
         console.log("updated game");
-        //loadDomosFromServer();
+        ReactDOM.render(React.createElement(
+            "div",
+            null,
+            React.createElement(
+                "h2",
+                null,
+                " Updated a game "
+            )
+        ), document.querySelector("#domos"));
     });
 };
 
@@ -166,7 +213,19 @@ function startGame(gameID, csrf) {
 
     sendAjax('GET', '/getQuiz', queryData, function (gameData) {
         console.log(gameData);
-        showQuiz(gameData.games, csrf);
+        if (gameData.valid) {
+            showQuiz(gameData.games, csrf);
+        } else {
+            ReactDOM.render(React.createElement(
+                "div",
+                { id: "scoreDIV" },
+                React.createElement(
+                    "h2",
+                    null,
+                    " Sorry you have attempted this quiz too many times"
+                )
+            ), document.querySelector("#domos"));
+        }
     });
 }
 
@@ -186,19 +245,31 @@ var submitQuiz = function submitQuiz(e) {
     //console.log($("#quizForm").serialize());
 
     sendAjax('GET', '/checkAnswers', $("#quizForm").serialize(), function (result) {
-        console.log(result);
-        ReactDOM.render(React.createElement(
-            "div",
-            { id: "scoreDIV" },
-            React.createElement(
-                "h2",
-                null,
-                " Your Scored a ",
-                result.score,
-                "/",
-                result.maxScore
-            )
-        ), document.querySelector("#domos"));
+
+        var score = { score: result.score, maxScore: result.maxScore };
+        var request = $("#quizForm [type=hidden]").serialize() + "&" + $.param(score);
+
+        console.log(request);
+        //var score =  JSON.parse( $("#quizForm [type=hidden]").serialize());
+        //console.log($("#quizForm [type=hidden]").serialize());
+
+        sendAjax('POST', '/updateScore', request, function (scores) {
+
+            //console.log(scores);
+
+            ReactDOM.render(React.createElement(
+                "div",
+                { id: "scoreDIV" },
+                React.createElement(
+                    "h2",
+                    null,
+                    " Your Scored a ",
+                    result.score,
+                    "/",
+                    result.maxScore
+                )
+            ), document.querySelector("#domos"));
+        });
     });
 };
 
@@ -331,7 +402,7 @@ var ViewList = function ViewList(props) {
                 "h3",
                 { className: "gameCreator" },
                 " Creator: ",
-                game.creator,
+                game.creatorUsername,
                 " "
             ),
             React.createElement(
@@ -366,6 +437,25 @@ var User = function User(props) {
 
     var gameNodes = props.games.map(function (game) {
 
+        var maxScore = game.rounds.length;
+        var totalScores = 0;
+        var totalAttempts = 0;
+        var usersAttempted = 0;
+        var avereageScore = 0;
+        for (var i = 0; i < game.attempts.length; i++) {
+            for (var j = 0; j < game.attempts[i].scores.length; j++) {
+                totalScores += game.attempts[i].scores[j];
+                totalAttempts++;
+            }
+            usersAttempted++;
+        }
+
+        if (totalAttempts > 0) {
+            var avereageScore = totalScores / (maxScore * totalAttempts);
+        }
+
+        //console.log(avereageScore);
+
         return React.createElement(
             "div",
             { key: game._id, className: "domo" },
@@ -386,6 +476,34 @@ var User = function User(props) {
                 " "
             ),
             React.createElement(
+                "h4",
+                { className: "gameAge" },
+                " Average Score: ",
+                avereageScore,
+                " "
+            ),
+            React.createElement(
+                "h4",
+                { className: "gameAge" },
+                " Users attempted: ",
+                usersAttempted,
+                " "
+            ),
+            React.createElement(
+                "h4",
+                { className: "gameAge" },
+                " Total Attempts: ",
+                totalAttempts,
+                " "
+            ),
+            React.createElement(
+                "button",
+                { className: "statsButton", id: "viewStats", type: "button", onClick: function onClick() {
+                        return viewStats(game, avereageScore, maxScore);
+                    } },
+                " View total reports "
+            ),
+            React.createElement(
                 "button",
                 { className: "viewer", id: "startQuiz", type: "button", onClick: function onClick() {
                         return editGame(game._id, props.csrf);
@@ -400,6 +518,86 @@ var User = function User(props) {
         { className: "domoList" },
         gameNodes
     );
+};
+
+var Attempt = function Attempt(props) {
+    console.log(props);
+    if (props.attempts.length === 0) {
+        return React.createElement(
+            "div",
+            { className: "gameList" },
+            React.createElement(
+                "h3",
+                { className: "emptyDomo" },
+                " No Users have attempted the quiz yet "
+            )
+        );
+    }
+
+    var gameNodes = props.attempts.map(function (attempt) {
+
+        var userAve = 0;
+        var totalScores = "";
+
+        for (var i = 0; i < attempt.scores.length; i++) {
+            userAve += attempt.scores[i];
+            totalScores += "  " + String(attempt.scores[i] / props.max);
+        }
+        userAve = userAve / (attempt.scores.length * props.max);
+
+        //console.log(attempt);
+
+        return React.createElement(
+            "div",
+            { className: "domo" },
+            React.createElement(
+                "h3",
+                null,
+                " User: ",
+                attempt.playerName,
+                " "
+            ),
+            React.createElement(
+                "h3",
+                null,
+                " avereageScore: ",
+                userAve,
+                " "
+            ),
+            React.createElement(
+                "h3",
+                null,
+                " Scores: ",
+                totalScores,
+                " "
+            )
+        );
+    });
+
+    return React.createElement(
+        "div",
+        { className: "domoList" },
+        React.createElement(
+            "h3",
+            null,
+            " Average Score: ",
+            props.average,
+            " "
+        ),
+        React.createElement(
+            "h3",
+            null,
+            " Total Questions: ",
+            props.max,
+            " "
+        ),
+        gameNodes
+    );
+};
+
+var viewStats = function viewStats(game, avereageScore, maxScore) {
+
+    ReactDOM.render(React.createElement(Attempt, { attempts: game.attempts, average: avereageScore, max: maxScore }), document.querySelector("#domos"));
 };
 
 var DoneQuestion = function DoneQuestion(props) {
@@ -492,11 +690,18 @@ var DoneQuestion = function DoneQuestion(props) {
 };
 
 var Question = function Question(props) {
-    //console.log(props);
+
     return React.createElement(
         "div",
         null,
         React.createElement("br", null),
+        React.createElement(
+            "button",
+            { className: "viewer", id: "MakeClass", type: "button", onClick: function onClick() {
+                    return props.deleteQuestion(props.number);
+                } },
+            " Delete Question "
+        ),
         React.createElement(
             "label",
             { htmlFor: "q" + props.number + "name" },
@@ -589,6 +794,13 @@ var Maker = function Maker(props) {
                     " Quiz Title: "
                 ),
                 React.createElement("input", { id: "quizName", type: "text", name: "name", placeholder: "Title" }),
+                React.createElement("br", null),
+                React.createElement(
+                    "label",
+                    { htmlFor: "maxAttempts" },
+                    " Max attempts(-1 is infinite): "
+                ),
+                React.createElement("input", { id: "attemptCount", type: "number", name: "maxAttempts", min: "-1", max: "10", defaultValue: "-1" }),
                 React.createElement("input", { type: "hidden", name: "_csrf", value: props.csrf }),
                 React.createElement("input", { type: "hidden", name: "count", value: props.count }),
                 props.children,
@@ -603,10 +815,26 @@ var Maker = function Maker(props) {
             )
         );
     } else {
-        console.log(props.addChild);
+        //console.log(props.addChild);
         return React.createElement(
             "div",
             null,
+            React.createElement(
+                "h2",
+                null,
+                " ",
+                React.createElement(
+                    "b",
+                    null,
+                    " Note: "
+                ),
+                " all answers have been reset"
+            ),
+            React.createElement(
+                "h2",
+                null,
+                " Submitting this will reset all attempts "
+            ),
             React.createElement(
                 "form",
                 { id: "makerForm",
@@ -621,6 +849,13 @@ var Maker = function Maker(props) {
                     " Quiz Title: "
                 ),
                 React.createElement("input", { id: "quizName", type: "text", name: "name", defaultValue: props.title }),
+                React.createElement("br", null),
+                React.createElement(
+                    "label",
+                    { htmlFor: "maxAttempts" },
+                    " Max attempts(-1 is infinite): "
+                ),
+                React.createElement("input", { id: "attemptCount", type: "number", name: "maxAttempts", min: "-1", max: "10", defaultValue: "-1" }),
                 React.createElement("input", { type: "hidden", name: "_id", value: props.id }),
                 React.createElement("input", { type: "hidden", name: "_csrf", value: props.csrf }),
                 React.createElement("input", { type: "hidden", name: "count", value: props.count }),
@@ -716,6 +951,7 @@ var loadDomosFromServer = function loadDomosFromServer() {
 
 var showUserPage = function showUserPage(_id, csrf) {
     sendAjax('GET', '/getGames', null, function (data) {
+        console.log(data);
         ReactDOM.render(React.createElement(User, { csrf: csrf, games: data.games }), document.querySelector("#domos"));
     });
 };
@@ -740,7 +976,8 @@ var setup = function setup(csrf) {
     //ReactDOM.render(
     //    <DomoList domos={[]} />, document.querySelector("#domos")
     //);
-    loadDomosFromServer();
+    //loadDomosFromServer();
+
 };
 
 var getToken = function getToken() {

@@ -2,6 +2,7 @@ const controllers = require('./controllers');
 const mid = require('./middleware');
 
 const router = (app) => {
+  app.post('/updateScore', mid.requiresLogin, controllers.Game.updateScore);
   app.post('/updateGame', mid.requiresLogin, controllers.Game.updateGame);
   app.get('/getUsername', mid.requiresLogin, controllers.Account.getUsername);
   app.get('/checkAnswers', mid.requiresLogin, controllers.Game.checkAnswers);
