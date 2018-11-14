@@ -179,7 +179,7 @@ const getQuiz = (req, res) => Game.GameModel.getQuiz(req.query._id, (err, docs) 
 
 const addAttempt = (userID, userName, gameID, game, score, callback) => {
   let index = -1;
-
+  let newGame = game;
   index = findAttempt(game, userID);
 
   if (index === -1) {
@@ -194,23 +194,23 @@ const addAttempt = (userID, userName, gameID, game, score, callback) => {
     };
 
     if (game.attempts.length === 0) {
-      game.attempts = [attempt];
+      newGame.attempts = [attempt];
     } else {
-      game.attempts = game.attempts.concat([attempt]);
+      newGame.attempts = game.attempts.concat([attempt]);
     }
     // console.log(game);
   } else {
     // console.log(game.attempts[index]);
 
-    game.attempts[index].scores = game.attempts[index].scores.concat([score]);
+    newGame.attempts[index].scores = game.attempts[index].scores.concat([score]);
     // console.log(game.attempts[index]);
-    game.attempts[index].attemptsTaken = game.attempts[index].scores.length;
+    newGame.attempts[index].attemptsTaken = game.attempts[index].scores.length;
   }
 
   // console.log('new game created');
 
 
-  game.save((err, updatedGame) => {
+  newGame.save((err, updatedGame) => {
     if (err) return callback(err, updatedGame);
 
     return callback(err, updatedGame);

@@ -63,7 +63,7 @@ class MakerComponent extends React.Component{
                     // i--;
                 }
                 else{
-                children.push(<Question key={i} number={i} deleteQuestion={this.removeChild} />);
+                    children.push(<Question key={i} number={i} deleteQuestion={this.removeChild} />);
                 }
 
                 
