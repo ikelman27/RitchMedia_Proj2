@@ -30,23 +30,20 @@ var MakerComponent = function (_React$Component) {
             _this.title = props.data.name;
         }
 
-        _this.deleteIndex = -1;
+        //this.deleteIndex = -1;
 
         _this.onAddChild = function () {
             //console.log( $("#makerForm").serialize());
             _this.setState({
                 numChildren: _this.state.numChildren + 1
             });
-            _this.deleteIndex = -1;
+            //this.deleteIndex = -1;
         };
 
         _this.removeChild = function (loc) {
-
-            console.log(" location " + loc);
-
-            _this.deleteIndex = loc;
+            //this.deleteIndex = loc;
             _this.setState({
-                numChildren: _this.state.numChildren
+                numChildren: _this.state.numChildren - 1
             });
         };
         return _this;
@@ -56,42 +53,23 @@ var MakerComponent = function (_React$Component) {
         key: "render",
         value: function render() {
             var children = [];
+            var devChild = [];
             if (!this.edit) {
-
-                var deleteChild = false;
-
                 for (var i = 0; i < this.state.numChildren; i++) {
-                    //console.log(this.state.numChildren);
-                    //console.log(i +"   " + this.deleteIndex);
-                    if (this.deleteIndex === i) {
-                        deleteChild = true;
-                        console.log('test');
-                        //children.splice(this,this.deleteIndex, 1);
-                        //this.deleteIndex = -1;
-                        // i--;
-                    } else {
-                        children.push(React.createElement(Question, { key: i, number: i, deleteQuestion: this.removeChild }));
-                    }
+                    children.push(React.createElement(Question, { key: i, number: i }));
                 };
-
-                if (deleteChild) {
-                    this.state.numChildren--;
-                    this.deleteIndex = -1;
-                }
-
                 return React.createElement(
                     Maker,
-                    { addChild: this.onAddChild, csrf: this.csrf, count: this.state.numChildren, edit: false },
+                    { addChild: this.onAddChild, csrf: this.csrf, count: this.state.numChildren, edit: false, deleteQuestion: this.removeChild },
                     children
                 );
             } else {
                 for (var i = 0; i < this.state.numChildren; i++) {
                     children.push(React.createElement(DoneQuestion, { key: i, number: i, data: this.data.rounds[i] }));
                 };
-
                 return React.createElement(
                     Maker,
-                    { addChild: this.onAddChild, csrf: this.csrf, count: this.state.numChildren, title: this.title, edit: true, id: this.data._id },
+                    { addChild: this.onAddChild, csrf: this.csrf, count: this.state.numChildren, title: this.title, edit: true, id: this.data._id, deleteQuestion: this.removeChild },
                     children
                 );
             }
@@ -126,32 +104,26 @@ var handleDomo = function handleDomo(e) {
 
     return false;
 };
+/*
+const DomoForm = (props) => {
+    return (
+        <form id="domoForm"
+            onSubmit={handleDomo}
+            action="/maker"
+            method="POST"
+            className="domoForm"
+        >
+            <label htmlFor="name"> Namear: </label>
+            <input id="domoName" type="text" name="name" placeholder="Domo Name" />
+            <label htmlFor="age"> Age: </label>
+            <input id="domoAge" type="text" name="age" placeholder="domo age" />
+            <input type="hidden" name="_csrf" value={props.csrf} />
+            <input className="makeDomoSubmit" type="submit" value="Make Domo" />
 
-var DomoForm = function DomoForm(props) {
-    return React.createElement(
-        "form",
-        { id: "domoForm",
-            onSubmit: handleDomo,
-            action: "/maker",
-            method: "POST",
-            className: "domoForm"
-        },
-        React.createElement(
-            "label",
-            { htmlFor: "name" },
-            " Namear: "
-        ),
-        React.createElement("input", { id: "domoName", type: "text", name: "name", placeholder: "Domo Name" }),
-        React.createElement(
-            "label",
-            { htmlFor: "age" },
-            " Age: "
-        ),
-        React.createElement("input", { id: "domoAge", type: "text", name: "age", placeholder: "domo age" }),
-        React.createElement("input", { type: "hidden", name: "_csrf", value: props.csrf }),
-        React.createElement("input", { className: "makeDomoSubmit", type: "submit", value: "Make Domo" })
+        </form>
     );
 };
+*/
 
 var addGame = function addGame(e) {
     e.preventDefault();
@@ -696,13 +668,6 @@ var Question = function Question(props) {
         null,
         React.createElement("br", null),
         React.createElement(
-            "button",
-            { className: "viewer", id: "MakeClass", type: "button", onClick: function onClick() {
-                    return props.deleteQuestion(props.number);
-                } },
-            " Delete Question "
-        ),
-        React.createElement(
             "label",
             { htmlFor: "q" + props.number + "name" },
             " Question ",
@@ -811,6 +776,14 @@ var Maker = function Maker(props) {
                     " Add question "
                 ),
                 React.createElement("br", null),
+                React.createElement(
+                    "button",
+                    { className: "viewer", id: "deleteClass", type: "button", onClick: function onClick() {
+                            return props.deleteQuestion(props.number);
+                        } },
+                    " Delete Last Question "
+                ),
+                React.createElement("br", null),
                 React.createElement("input", { className: "makeDomoSubmit", type: "submit", value: "Create Quiz" })
             )
         );
@@ -867,6 +840,14 @@ var Maker = function Maker(props) {
                     " Add question "
                 ),
                 React.createElement("br", null),
+                React.createElement(
+                    "button",
+                    { className: "viewer", id: "deleteClass", type: "button", onClick: function onClick() {
+                            return props.deleteQuestion(props.number);
+                        } },
+                    " Delete Last Question "
+                ),
+                React.createElement("br", null),
                 React.createElement("input", { className: "makeDomoSubmit", type: "submit", value: "Update Quiz" })
             )
         );
@@ -894,60 +875,50 @@ var MenuUI = function MenuUI(props) {
     );
 };
 
-var DomoList = function DomoList(props) {
+/*const DomoList = function (props) {
     if (props.domos.length === 0) {
-        return React.createElement(
-            "div",
-            { className: "domoList" },
-            React.createElement(
-                "h3",
-                { className: "emptyDomo" },
-                " No Domos yet "
-            )
+        return (
+            <div className="domoList">
+                <h3 className="emptyDomo"> No Domos yet </h3>
+            </div>
         );
     }
 
-    var domoNodes = props.domos.map(function (domo) {
-        return React.createElement(
-            "div",
-            { key: domo._id, className: "domo" },
-            React.createElement("img", { src: "assets/img/domoface.jpeg", alt: "domo face", className: "domoFace" }),
-            React.createElement(
-                "h3",
-                { className: "domoName" },
-                " Name: ",
-                domo.name,
-                " "
-            ),
-            React.createElement(
-                "h3",
-                { className: "domoAge" },
-                " Age: ",
-                domo.age,
-                " "
-            )
+
+    const domoNodes = props.domos.map(function (domo) {
+        return (
+            <div key={domo._id} className='domo'>
+                <img src="assets/img/domoface.jpeg" alt="domo face" className="domoFace" />
+                <h3 className="domoName"> Name: {domo.name} </h3>
+                <h3 className="domoAge"> Age: {domo.age} </h3>
+            </div>
         );
     });
 
-    return React.createElement(
-        "div",
-        { className: "domoList" },
-        domoNodes
+    return (
+        <div className="domoList">
+            {domoNodes}
+        </div>
     );
 };
 
-var loadDomosFromServer = function loadDomosFromServer() {
+const loadDomosFromServer = () => {
 
     //console.log("test");
-    sendAjax('GET', '/getGames', null, function (data) {
-        console.log(data);
+    //sendAjax('GET', '/getGames', null, (data) => {
+    //    console.log(data);
 
+//
         //console.log($.param(game));
-        sendAjax('GET', '/listGames', null, function (gameData) {
-            console.log(gameData);
-        });
-    });
-};
+    //    sendAjax('GET', '/listGames', null, (gameData) => {
+   //         console.log(gameData);
+     //   });
+    //});
+
+
+
+
+};*/
 
 var showUserPage = function showUserPage(_id, csrf) {
     sendAjax('GET', '/getGames', null, function (data) {
@@ -972,12 +943,6 @@ var setup = function setup(csrf) {
     });
 
     showViewer(csrf);
-
-    //ReactDOM.render(
-    //    <DomoList domos={[]} />, document.querySelector("#domos")
-    //);
-    //loadDomosFromServer();
-
 };
 
 var getToken = function getToken() {

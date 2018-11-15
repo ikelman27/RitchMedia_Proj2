@@ -2,6 +2,22 @@ const models = require('../models');
 const Game = models.Game;
 // const account = models.Account;
 
+const makerPage = (req, res) => {
+  Game.GameModel.getIntros(null, (err, docs) => {
+    if (err) {
+      console.log(err);
+      return res.status(400).json({
+        error: 'an error occoured',
+      });
+    }
+    return res.render('app', {
+      csrfToken: req.csrfToken(),
+      games: docs,
+    });
+  });
+};
+
+
 const createGame = (req, res) => {
   if (!req.body.name || req.body.count === 0) {
     return res.status(400).json({
@@ -179,7 +195,7 @@ const getQuiz = (req, res) => Game.GameModel.getQuiz(req.query._id, (err, docs) 
 
 const addAttempt = (userID, userName, gameID, game, score, callback) => {
   let index = -1;
-  let newGame = game;
+  const newGame = game;
   index = findAttempt(game, userID);
 
   if (index === -1) {
@@ -281,6 +297,7 @@ const getGame = (req, res) => Game.GameModel.findByOwner(req.session.account._id
   });
 });
 
+module.exports.makerPage = makerPage;
 module.exports.updateScore = updateScore;
 module.exports.updateGame = updateGame;
 module.exports.checkAnswers = checkAnswers;

@@ -143,7 +143,7 @@ GameSchema.statics.getAnswers = (id, callback) =>
 GameModel.findById(id, 'rounds.result').exec(callback);
 
 
-GameSchema.statics.getAllAttemtps = (id, callback) => 
+GameSchema.statics.getAllAttemtps = (id, callback) =>
 GameModel.findById(id, 'attempts').exec(callback);
 
 
