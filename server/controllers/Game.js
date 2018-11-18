@@ -262,7 +262,7 @@ const getGame = (req, res) => Game.GameModel.findByOwner(req.session.account._id
       error: 'An error occured',
     });
   }
-  // console.log(docs);
+ 
   return res.json({
     games: docs,
   });

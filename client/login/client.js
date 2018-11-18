@@ -86,7 +86,6 @@ const signupWindow = (props) => {
 
 
 
-//!--- Question for wednesday query selector jquery
 const createLoginWindow = (csrf) => {
     ReactDOM.render(React.createElement(loginWindow, { csrf: csrf }),
         document.querySelector("#content")
@@ -99,23 +98,6 @@ const createSignupWindow = (csrf) => {
     );
 };
 
-/*
-This
-const createSignupWindow = (csrf) => {
-    ReactDOM.render(
-        <signupWindow csrf={csrf} />,
-        document.querySelector("#content")
-    );
-};
-
-Turns into this with quotes
-const createSignupWindow = (csrf) => {
-    ReactDOM.render(React.createElement("signupWindow", { csrf: csrf }),
-        document.querySelector("#content")
-    );
-};
-
-*/
 
 
 const setup = (csrf) => {
