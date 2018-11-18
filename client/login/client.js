@@ -5,7 +5,7 @@ const handleLogin = (e) => {
     }, 350);
 
     if ($("#user").val() == '' || $("#pass").val() == '') {
-        handleError("RAWR! Username or password is empty");
+        handleError("Username or password is empty");
         return false;
     }
 
@@ -23,12 +23,12 @@ const handleSignup = (e) => {
     }, 350);
 
     if ($("#user").val() == '' || $("#pass").val() == '' || $("#pass2").val() == '') {
-        handleError("RAWR! Username or password is empty");
+        handleError(" Username or password is empty");
         return false;
     }
 
     if ($("#pass").val() !== $("#pass2").val()) {
-        handleError("RAWR! Passwords do not match");
+        handleError(" Passwords do not match");
         return false;
     }
 

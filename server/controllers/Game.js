@@ -1,11 +1,10 @@
 const models = require('../models');
 const Game = models.Game;
-// const account = models.Account;
 
+// displays the page with all the games after login
 const makerPage = (req, res) => {
   Game.GameModel.getIntros(null, (err, docs) => {
     if (err) {
-      console.log(err);
       return res.status(400).json({
         error: 'an error occoured',
       });
@@ -17,18 +16,18 @@ const makerPage = (req, res) => {
   });
 };
 
-
+// create a new game on the server
 const createGame = (req, res) => {
-  if (!req.body.name || req.body.count === 0) {
+  if (!req.body.name || req.body.count <= 0) {
     return res.status(400).json({
       error: 'A title and questions are requiored',
     });
   }
-  // console.log("<____________________________________________________________>");
-  const keys = Object.keys(req.body);
-  // console.dir("#Questions " + req.body.count);
-  const roundData = [];
 
+  const keys = Object.keys(req.body);
+
+  const roundData = [];
+  // for each question add the data
   for (let i = 0; i < req.body.count; i++) {
     roundData.push({
       question: req.body[keys[i * 6 + 4]],
@@ -40,10 +39,7 @@ const createGame = (req, res) => {
 
     });
   }
-  // console.log(roundData);
-
-  console.log();
-
+  // create the game
   const game = {
     name: req.body.name,
     rounds: roundData,
@@ -54,20 +50,15 @@ const createGame = (req, res) => {
 
 
   const newGame = new Game.GameModel(game);
-
+  // simple promis for errors
   const gamePromise = newGame.save();
   gamePromise.then(() => res.json({
     redirect: '/maker',
   }));
 
   gamePromise.catch((err) => {
-    console.log(err);
+    console.log(err.errors);
 
-    if (err.code === 11000) {
-      return res.status(400).json({
-        error: 'Username already in use',
-      });
-    }
 
     return res.status(400).json({
       error: 'An error occurred',
@@ -78,6 +69,7 @@ const createGame = (req, res) => {
   return gamePromise;
 };
 
+// updaates a pre existing game
 const updateGame = (req, res) => {
   if (!req.body.name || req.body.count === 0) {
     return res.status(400).json({
@@ -85,12 +77,13 @@ const updateGame = (req, res) => {
     });
   }
 
+  // get all the data ase as make game
   const id = req.body._id;
 
   const keys = Object.keys(req.body);
-  // console.dir("#Questions " + req.body.count);
+
   const roundData = [];
-  // console.log(req.body);
+
   for (let i = 0; i < req.body.count; i++) {
     roundData.push({
       question: req.body[keys[i * 6 + 5]],
@@ -102,7 +95,6 @@ const updateGame = (req, res) => {
 
     });
   }
-  // console.log(roundData);
 
 
   const game = {
@@ -115,25 +107,23 @@ const updateGame = (req, res) => {
   };
 
 
+  // find the game to update
   Game.GameModel.findById(id, (err, docs) => {
-    // const update = new GameModel(newGame);
-
+    // set it to the new game
     docs.set(game);
 
     docs.save((newErr, updatedGame) => {
       console.log(updatedGame);
     });
   });
-
-
+  // note if the user immediately clicks the game it may not have time to update
+  // return the game
   return res.json(game);
 };
 
+// gets the index of attemts that a user has made with a certian quiz
 const findAttempt = (quiz, userID) => {
-  // console.log(quiz);
-  console.log(quiz.attempts);
   for (let i = 0; i < quiz.attempts.length; i++) {
-    console.log(`${quiz.attempts[i].player}   ${userID}`);
     if (String(userID) === String(quiz.attempts[i].player)) {
       return i;
     }
@@ -142,7 +132,7 @@ const findAttempt = (quiz, userID) => {
   return -1;
 };
 
-
+// gets a specific quiz
 const getQuiz = (req, res) => Game.GameModel.getQuiz(req.query._id, (err, docs) => {
   if (err) {
     console.log(err);
@@ -151,53 +141,40 @@ const getQuiz = (req, res) => Game.GameModel.getQuiz(req.query._id, (err, docs) 
     });
   }
 
-  // console.log(docs.maxAttempts);
 
+  // if the user is not the creater and has already done the quiz the max number
+  // of times dont let them view the quiz
   if (String(docs.creator) !== String(req.session.account._id)) {
     if (docs.maxAttempts !== undefined) {
       if (docs.maxAttempts !== -1) {
         const attemptIndex = findAttempt(docs, req.session.account._id);
-        // console.log(attemptIndex);
-        console.log(attemptIndex);
+
         if (attemptIndex !== -1) {
           if (docs.attempts[attemptIndex].scores.length >= docs.maxAttempts) {
             return res.json({
               valid: false,
             });
           }
-          // todo prevent users from going above max attempts
         }
       }
     }
   }
 
-
+  // if they can view it return true
   return res.json({
     valid: true,
     games: docs,
   });
-
-  /*
-  game = docs;
-
-  const username = account.AccountModel.findUsername(docs.creator, (err, docs) => {
-
-      return res.json({
-        game: game,
-        username: docs.username,
-      });
-    }
-
-  );
-  */
 });
 
-
+// adds an attempt to the users page
 const addAttempt = (userID, userName, gameID, game, score, callback) => {
   let index = -1;
   const newGame = game;
+  // looks for a users index of attempst in a agame
   index = findAttempt(game, userID);
 
+  // if they aren't in the attmpts add them
   if (index === -1) {
     console.log('new player');
     const attempt = {
@@ -209,23 +186,21 @@ const addAttempt = (userID, userName, gameID, game, score, callback) => {
 
     };
 
+    // if there are no attepmts set the first one otherwise add it to the end
     if (game.attempts.length === 0) {
       newGame.attempts = [attempt];
     } else {
       newGame.attempts = game.attempts.concat([attempt]);
     }
-    // console.log(game);
   } else {
-    // console.log(game.attempts[index]);
-
+    // otherwise add there new score to the back of there scores
     newGame.attempts[index].scores = game.attempts[index].scores.concat([score]);
-    // console.log(game.attempts[index]);
+
     newGame.attempts[index].attemptsTaken = game.attempts[index].scores.length;
   }
 
-  // console.log('new game created');
 
-
+  // save the attempts
   newGame.save((err, updatedGame) => {
     if (err) return callback(err, updatedGame);
 
@@ -233,27 +208,29 @@ const addAttempt = (userID, userName, gameID, game, score, callback) => {
   });
 };
 
+// updates a users score
 const updateScore = (req, res) => {
-  // console.log(req.body);
+  // find the game
   Game.GameModel.findById(req.body._id, (err, game) => {
-    // console.log(game);
+    // add the attempt to the game
     addAttempt(req.session.account._id, req.session.account.username,
       req.body._id, game, req.body.score, (newErr, updatedGame) =>
-      // console.log(err);
+
       res.json(updatedGame));
   });
 };
 
+// checks the users answers for a quiz
 const checkAnswers = (req, res) => {
   Game.GameModel.getAnswers(req.query._id, (err, docs) => {
     const totalPoints = docs.rounds.length;
     let score = 0;
 
+    // loop through and get each answer
     for (let i = 1; i <= totalPoints; i++) {
       const ans = `q${i}`;
 
-      console.log(req.query[ans]);
-      console.log(docs.rounds[i - 1].result);
+      // if the answer is correct increase there score
       if (req.query[ans] !== undefined) {
         if (String(req.query[ans]) === String(docs.rounds[i - 1].result)) {
           score++;
@@ -269,21 +246,15 @@ const checkAnswers = (req, res) => {
   });
 };
 
-
+// display all games by their intro aka name question length and title
 const listGames = (req, res) => Game.GameModel.getIntros(null, (err, docs) => {
   const game = docs;
   return res.json({
     game,
   });
-  /* console.log(docs[0]);
-  const username = account.AccountModel.findUsername(docs, (err, docs) => {
-    console.log("usernames " + docs);
-
-
-  });*/
 });
 
-
+// gets all the data for a users games
 const getGame = (req, res) => Game.GameModel.findByOwner(req.session.account._id, (err, docs) => {
   if (err) {
     console.log(err);

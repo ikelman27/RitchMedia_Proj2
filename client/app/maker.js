@@ -1,9 +1,6 @@
 
 
-
-
-
-
+//class to hold the quiz maker
 class MakerComponent extends React.Component {
     constructor(props) {
         super(props)
@@ -22,30 +19,32 @@ class MakerComponent extends React.Component {
             this.title = props.data.name;
         }
 
-        //this.deleteIndex = -1;
-
+        //whenever a child is added set the state to children +1
         this.onAddChild = () => {
-            //console.log( $("#makerForm").serialize());
+
             this.setState({
                 numChildren: this.state.numChildren + 1
             });
-            //this.deleteIndex = -1;
+
         }
 
+        //delete the last child
         this.removeChild = (loc) => {
-            //this.deleteIndex = loc;
+
             this.setState({
                 numChildren: this.state.numChildren - 1,
             });
         }
     }
 
+    //function to render the maker component
     render() {
         const children = [];
-        const devChild = [];
+        //add number of children to the form
+        //if it isnt an edit use question otherwise use done question
         if (!this.edit) {
             for (var i = 0; i < this.state.numChildren; i++) {
-                children.push(<Question key={i} number={i}  />);
+                children.push(<Question key={i} number={i} className="test" />);
             };
             return (
                 <Maker addChild={this.onAddChild} csrf={this.csrf} count={this.state.numChildren} edit={false} deleteQuestion={this.removeChild}>
@@ -71,62 +70,13 @@ class MakerComponent extends React.Component {
 
 }
 
-
-
-
-const handleDomo = (e) => {
-    e.preventDefault();
-
-    $("#domoMessage").animate({
-        width: 'hide'
-    }, 350);
-
-    if ($("#domoName").val() == '' || $("#domoAge").val == '') {
-        handleError('All fields are required');
-        return false;
-    }
-
-    //sendAjax('POST', '/addGame',  $("#domoForm").serialize(), function(param){
-    //   console.log("created game");
-    //loadDomosFromServer();
-    //});
-
-    //sendAjax('POST', $("#domoForm").attr("action"), $("#domoForm").serialize(), function (param) {
-    //   console.log("test");
-    //    loadDomosFromServer();
-    //});
-
-
-
-
-    return false;
-}
-/*
-const DomoForm = (props) => {
-    return (
-        <form id="domoForm"
-            onSubmit={handleDomo}
-            action="/maker"
-            method="POST"
-            className="domoForm"
-        >
-            <label htmlFor="name"> Namear: </label>
-            <input id="domoName" type="text" name="name" placeholder="Domo Name" />
-            <label htmlFor="age"> Age: </label>
-            <input id="domoAge" type="text" name="age" placeholder="domo age" />
-            <input type="hidden" name="_csrf" value={props.csrf} />
-            <input className="makeDomoSubmit" type="submit" value="Make Domo" />
-
-        </form>
-    );
-};
-*/
-
+//adds a new game to the server
 const addGame = (e) => {
     e.preventDefault();
     console.log($("#makerForm").serialize());
     sendAjax('POST', '/createGame', $("#makerForm").serialize(), function (param) {
         console.log("created game");
+        //display data so users dont spam click the button
         ReactDOM.render(
             <div>
                 <h2> Created a new game </h2>
@@ -135,6 +85,7 @@ const addGame = (e) => {
     });
 };
 
+//updates an existing game
 const updateGame = (e) => {
     e.preventDefault();
     //console.log($("#makerForm").serialize());
@@ -148,6 +99,7 @@ const updateGame = (e) => {
     });
 };
 
+//clicking the button brings you to the make game form
 function showMaker(csrf) {
 
     ReactDOM.render(
@@ -155,7 +107,7 @@ function showMaker(csrf) {
     );
 };
 
-
+//views all the games that were created
 function showViewer(csrf) {
     sendAjax('GET', '/listGames', null, (gameData) => {
         var games = gameData.game;
@@ -166,6 +118,8 @@ function showViewer(csrf) {
     });
 }
 
+
+//display a single game
 function showQuiz(gameData, csrf) {
 
     ReactDOM.render(
@@ -173,7 +127,7 @@ function showQuiz(gameData, csrf) {
     );
 }
 
-
+//sends a request to the server to get a specific game
 function startGame(gameID, csrf) {
     var queryData = {
         csrf: csrf,
@@ -182,10 +136,12 @@ function startGame(gameID, csrf) {
 
 
     sendAjax('GET', '/getQuiz', queryData, (gameData) => {
-        console.log(gameData);
+        //console.log(gameData);
+        //if the data is valid display the quiz
         if (gameData.valid) {
             showQuiz(gameData.games, csrf);
         }
+        //if the game isn't valid the user has attempted the game to many times
         else {
             ReactDOM.render(
                 <div id="scoreDIV">
@@ -197,13 +153,14 @@ function startGame(gameID, csrf) {
     });
 }
 
+//request for a specific game then calls maker on that game to view it in the editor mode
 function editGame(gameID, csrf) {
     var queryData = {
         csrf: csrf,
         _id: gameID
     }
     sendAjax('GET', '/getQuiz', queryData, (gameData) => {
-        console.log(gameData.games);
+        //console.log(gameData.games);
         ReactDOM.render(
             <MakerComponent csrf={csrf} childCount={gameData.games.rounds.length} edit={true} data={gameData.games} />, document.querySelector("#domos")
         );
@@ -211,26 +168,16 @@ function editGame(gameID, csrf) {
     });
 }
 
-
+//uploads user answers to the server then gets thier score and updades that
 const submitQuiz = (e) => {
     e.preventDefault();
-    //console.log($("#quizForm").serialize());
+    
 
     sendAjax('GET', '/checkAnswers', $("#quizForm").serialize(), (result) => {
-
-
         var score = { score: result.score, maxScore: result.maxScore };
         var request = $("#quizForm [type=hidden]").serialize() + "&" + $.param(score);
 
-        console.log(request);
-        //var score =  JSON.parse( $("#quizForm [type=hidden]").serialize());
-        //console.log($("#quizForm [type=hidden]").serialize());
-
         sendAjax('POST', '/updateScore', request, (scores) => {
-
-
-            //console.log(scores);
-
             ReactDOM.render(
                 <div id="scoreDIV">
                     <h2> Your Scored a {result.score}/{result.maxScore}</h2>
@@ -243,6 +190,7 @@ const submitQuiz = (e) => {
     });
 }
 
+//the data to be displayed when the user starts a quiz
 const Quiz = (props) => {
 
     if (props.gameData.rounds.length === 0) {
@@ -253,16 +201,16 @@ const Quiz = (props) => {
         );
     }
 
-    //console.log(props.gameData);
+    //loop through each question and display the data
     var i = 0;
     const questionNode = props.gameData.rounds.map(function (round) {
         i++;
         return (
 
-            <div className='domo'>
+            <div className='question'>
 
-                <h3 className="gameName"> Question {i} </h3>
-                <h3 className="gameName"> {round.question} </h3>
+                <h3 className="questionName"> Question {i} </h3>
+                <h3 className="questionRound"> {round.question} </h3>
                 <div id="question" name="quest">
 
                     <input type="radio" className="answer" id={"q" + i + "a1"} name={"q" + i} value='1' />
@@ -287,7 +235,7 @@ const Quiz = (props) => {
         );
     });
 
-
+    //return the full quiz
     return (
         <form id="quizForm"
             onSubmit={submitQuiz}
@@ -299,17 +247,14 @@ const Quiz = (props) => {
             <input type="hidden" name="_id" value={props.gameData._id} />
 
             {questionNode}
-
-
-
-
             <input className="makeDomoSubmit" type="submit" value="Submit Quiz" />
         </form>
     );
 }
 
-const ViewList = (props) => {
 
+//when given a list of items creats the html to display them similar to quiz
+const ViewList = (props) => {
     if (props.games.length === 0) {
         return (
             <div className="gameList">
@@ -318,16 +263,14 @@ const ViewList = (props) => {
         );
     }
 
-
-
     const gameNodes = props.games.map(function (game) {
         return (
-            <div key={game._id} className='domo'>
+            <div key={game._id} className='domo' >
 
                 <h3 className="gameName" onClick={() => startGame(game._id, props.csrf)}> Name: {game.name} </h3>
                 <h3 className="gameAge"> Questions: {game.length} </h3>
                 <h3 className="gameCreator"> Creator: {game.creatorUsername} </h3>
-                <button className="viewer" id="startQuiz" type="button" onClick={() => startGame(game._id, props.csrf)}> Play Game </button>
+                <button id="startQuiz" type="button" onClick={() => startGame(game._id, props.csrf)}> Play Game </button>
 
             </div>
         );
@@ -340,6 +283,7 @@ const ViewList = (props) => {
     );
 }
 
+//displays all of the quizes that a user created similar to quiz
 const User = (props) => {
     if (props.games.length === 0) {
         return (
@@ -349,12 +293,9 @@ const User = (props) => {
         );
     }
 
-
-
-
-
     const gameNodes = props.games.map(function (game) {
 
+        //calculate the average score total attempts and number of users who attempted the quiz
         const maxScore = game.rounds.length;
         var totalScores = 0;
         var totalAttempts = 0;
@@ -372,9 +313,6 @@ const User = (props) => {
             var avereageScore = totalScores / (maxScore * totalAttempts);
         }
 
-
-        //console.log(avereageScore);
-
         return (
             <div key={game._id} className='domo'>
 
@@ -384,7 +322,7 @@ const User = (props) => {
                 <h4 className="gameAge" > Users attempted: {usersAttempted} </h4>
                 <h4 className="gameAge" > Total Attempts: {totalAttempts} </h4>
                 <button className="statsButton" id="viewStats" type="button" onClick={() => viewStats(game, avereageScore, maxScore)}> View total reports </button>
-                <button className="viewer" id="startQuiz" type="button" onClick={() => editGame(game._id, props.csrf)}> Edit Quiz </button>
+                <button id="startQuiz" type="button" onClick={() => editGame(game._id, props.csrf)}> Edit Quiz </button>
 
             </div>
         );
@@ -397,8 +335,8 @@ const User = (props) => {
     );
 }
 
+//create the stats for each user who have attempted a quiz
 const Attempt = (props) => {
-    console.log(props);
     if (props.attempts.length === 0) {
         return (
             <div className="gameList">
@@ -407,33 +345,21 @@ const Attempt = (props) => {
         );
     }
 
-
-
-
-
     const gameNodes = props.attempts.map(function (attempt) {
 
-
+        //calculate the sats for each user
         var userAve = 0;
         var totalScores = "";
-
-
-
         for (var i = 0; i < attempt.scores.length; i++) {
             userAve += attempt.scores[i];
             totalScores += "  " + String(attempt.scores[i] / props.max);
         }
         userAve = userAve / (attempt.scores.length * props.max);
-
-        //console.log(attempt);
-
         return (
-
             <div className='domo'>
                 <h3> User: {attempt.playerName} </h3>
                 <h3> avereageScore: {userAve} </h3>
                 <h3> Scores: {totalScores} </h3>
-
             </div>
         );
     });
@@ -447,6 +373,7 @@ const Attempt = (props) => {
     );
 }
 
+//renders the user stats
 const viewStats = (game, avereageScore, maxScore) => {
 
     ReactDOM.render(
@@ -455,8 +382,9 @@ const viewStats = (game, avereageScore, maxScore) => {
     )
 }
 
+//creates a question in maker that is used for updating a quiz (info pre filled in)
 const DoneQuestion = (props) => {
-    //console.log(props.data);
+  
     let values = {};
     if (props.data !== undefined) {
         values = {
@@ -471,7 +399,7 @@ const DoneQuestion = (props) => {
         }
     }
     return (
-        <div>
+        <div className="makerQuestion">
             <br />
             <label htmlFor={"q" + props.number + "name"}> Question {props.number + 1}: </label>
             <input type="textarea" name={"q" + props.number + "name"} className="QuestionTitles" defaultValue={values.question} />
@@ -479,10 +407,13 @@ const DoneQuestion = (props) => {
             <p> Enter your answers </p>
             <label htmlFor={"q" + props.number + "Ans1"}> Answer 1: </label>
             <input type="textarea" name={"q" + props.number + "Ans1"} className="questionAns" defaultValue={values.answers[0]} />
+            <br />
             <label htmlFor={"q" + props.number + "Ans2"}> Answer 2: </label>
             <input type="textarea" name={"q" + props.number + "Ans2"} className="questionAns" defaultValue={values.answers[1]} />
+            <br />
             <label htmlFor={"q" + props.number + "Ans3"}> Answer 3: </label>
             <input type="textarea" name={"q" + props.number + "Ans3"} className="questionAns" defaultValue={values.answers[2]} />
+            <br />
             <label htmlFor={"q" + props.number + "Ans4"}> Answer 4: </label>
             <input type="textarea" name={"q" + props.number + "Ans4"} className="questionAns" defaultValue={values.answers[3]} />
             <br />
@@ -502,22 +433,26 @@ const DoneQuestion = (props) => {
 
 };
 
+//same as done question except info isn't pre filled in
 const Question = (props) => {
 
     return (
-        <div>
+        <div className="makerQuestion">
             <br />
-           
+
             <label htmlFor={"q" + props.number + "name"}> Question {props.number + 1}: </label>
             <input type="textarea" name={"q" + props.number + "name"} className="QuestionTitles" placeholder="Enter your Question" />
             <br />
             <p> Enter your answers </p>
             <label htmlFor={"q" + props.number + "Ans1"}> Answer 1: </label>
             <input type="textarea" name={"q" + props.number + "Ans1"} className="questionAns" placeholder="Enter your Question" />
+            <br />
             <label htmlFor={"q" + props.number + "Ans2"}> Answer 2: </label>
             <input type="textarea" name={"q" + props.number + "Ans2"} className="questionAns" placeholder="Enter your Question" />
+            <br />
             <label htmlFor={"q" + props.number + "Ans3"}> Answer 3: </label>
             <input type="textarea" name={"q" + props.number + "Ans3"} className="questionAns" placeholder="Enter your Question" />
+            <br />
             <label htmlFor={"q" + props.number + "Ans4"}> Answer 4: </label>
             <input type="textarea" name={"q" + props.number + "Ans4"} className="questionAns" placeholder="Enter your Question" />
             <br />
@@ -528,18 +463,16 @@ const Question = (props) => {
                 <option value="3">Answer 3</option>
                 <option value="4">Answer 4</option>
             </select>
-
-
-
-
         </div>
 
     );
 
 };
 
+//creates a quiz constructor 
 const Maker = (props) => {
 
+    //if this is false then its a new quiz 
     if (!props.edit) {
 
         return (
@@ -560,10 +493,10 @@ const Maker = (props) => {
                     <input type="hidden" name="count" value={props.count} />
                     {props.children}
                     <br />
-                    <button className="viewer" id="MakeClass" type="button" onClick={props.addChild}> Add question </button>
+                    <button id="deleteQuestion" type="button" onClick={() => props.deleteQuestion(props.number)}> Delete Last Question </button>
+
+                    <button id="makeQuestion" type="button" onClick={props.addChild}> Add question </button>
                     <br />
-                    <button className="viewer" id="deleteClass" type="button" onClick={() => props.deleteQuestion(props.number)}> Delete Last Question </button>
-                    <br/>
                     <input className="makeDomoSubmit" type="submit" value="Create Quiz" />
 
                 </form>
@@ -572,8 +505,8 @@ const Maker = (props) => {
             </div>
         );
     }
+    //otherwise your updating an old quiz so you need to put data in the scene
     else {
-        //console.log(props.addChild);
         return (
             <div>
                 <h2> <b> Note: </b> all answers have been reset</h2>
@@ -594,10 +527,10 @@ const Maker = (props) => {
                     <input type="hidden" name="count" value={props.count} />
                     {props.children}
                     <br />
-                    <button className="viewer" id="MakeClass" type="button" onClick={props.addChild}> Add question </button>
+                    <button id="MakeClass" type="button" onClick={props.addChild}> Add question </button>
                     <br />
-                    <button className="viewer" id="deleteClass" type="button" onClick={() => props.deleteQuestion(props.number)}> Delete Last Question </button>
-                    <br/>
+                    <button id="deleteClass" type="button" onClick={() => props.deleteQuestion(props.number)}> Delete Last Question </button>
+                    <br />
                     <input className="makeDomoSubmit" type="submit" value="Update Quiz" />
 
                 </form>
@@ -608,6 +541,7 @@ const Maker = (props) => {
     }
 }
 
+//displays the two tabs at the top  
 const MenuUI = (props) => {
     return (
         <div id="headerUI">
@@ -618,74 +552,26 @@ const MenuUI = (props) => {
     );
 };
 
-/*const DomoList = function (props) {
-    if (props.domos.length === 0) {
-        return (
-            <div className="domoList">
-                <h3 className="emptyDomo"> No Domos yet </h3>
-            </div>
-        );
-    }
-
-
-    const domoNodes = props.domos.map(function (domo) {
-        return (
-            <div key={domo._id} className='domo'>
-                <img src="assets/img/domoface.jpeg" alt="domo face" className="domoFace" />
-                <h3 className="domoName"> Name: {domo.name} </h3>
-                <h3 className="domoAge"> Age: {domo.age} </h3>
-            </div>
-        );
-    });
-
-    return (
-        <div className="domoList">
-            {domoNodes}
-        </div>
-    );
-};
-
-const loadDomosFromServer = () => {
-
-    //console.log("test");
-    //sendAjax('GET', '/getGames', null, (data) => {
-    //    console.log(data);
-
-//
-        //console.log($.param(game));
-    //    sendAjax('GET', '/listGames', null, (gameData) => {
-   //         console.log(gameData);
-     //   });
-    //});
-
-
-
-
-};*/
-
-
-
-
-
+//gets a users page and displays it 
 const showUserPage = function (_id, csrf) {
     sendAjax('GET', '/getGames', null, (data) => {
-        console.log(data);
+        
         ReactDOM.render(
             <User csrf={csrf} games={data.games} />, document.querySelector("#domos")
         );
     });
 };
 
+//run on init
 const setup = function (csrf) {
-
-
-
+    //display the ui
     ReactDOM.render(
         <MenuUI csrf={csrf} />, document.querySelector("#DisplayHead")
     );
 
+    //get all quizes and display them
     sendAjax('GET', '/getUsername', null, (data) => {
-        console.log(data);
+        
         ReactDOM.render(
             <h3 id="profile" onClick={() => showUserPage(data._id, csrf)}>{data.username}</h3>, document.querySelector("#userProfile")
         );

@@ -8,7 +8,7 @@ const _ = require('underscore');
 const convertId = mongoose.Types.ObjectId;
 const setName = (name) => _.escape(name).trim();
 
-
+// stores an attempt
 const PlaySchema = new mongoose.Schema({
 
   game: {
@@ -44,7 +44,7 @@ const PlaySchema = new mongoose.Schema({
 
 });
 
-
+// scores a single question
 const RoundSchema = new mongoose.Schema({
   question: {
     type: String,
@@ -98,7 +98,7 @@ const RoundSchema = new mongoose.Schema({
 });
 
 
-// commented out for use in project
+// scores all the data for the game
 const GameSchema = new mongoose.Schema({
 
   name: {
@@ -139,6 +139,7 @@ const GameSchema = new mongoose.Schema({
 
 });
 
+
 GameSchema.statics.getAnswers = (id, callback) =>
 GameModel.findById(id, 'rounds.result').exec(callback);
 
@@ -147,18 +148,7 @@ GameSchema.statics.getAllAttemtps = (id, callback) =>
 GameModel.findById(id, 'attempts').exec(callback);
 
 
-/*
-GameSchema.statics.updateGame = (id, newGame, callback) => {
-  GameModel.findById(id, (err, docs) => {
-    // const update = new GameModel(newGame);
-
-    docs.set(newGame);
-
-    return newGame;
-  });
-  // return null;
-};
-*/
+// returns the name rounds and creator
 GameSchema.statics.getIntros = (id, callback) => GameModel.aggregate([{
   $project: {
     name: '$name',
@@ -169,13 +159,13 @@ GameSchema.statics.getIntros = (id, callback) => GameModel.aggregate([{
     creatorUsername: '$creatorUsername',
   },
 }]).exec(callback);
-// return GameModel.aggregate([{$project:
-// { _id: {$match:}, itemCount: {$size: '$rounds'}}}]).exec(callback);
 
+// gets the data for a single quiz to take
 GameSchema.statics.getQuiz = (id, callback) => GameModel.findById(id,
 'name creator rounds.question rounds.answer1 rounds.answer2 rounds.answer3 \n' +
 'rounds.answer4 creator attempts maxAttempts').exec(callback);
 
+// gets all games from one person
 GameSchema.statics.findByOwner = (ownerId, callback) => {
   const search = {
     creator: convertId(ownerId),

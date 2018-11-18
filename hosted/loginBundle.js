@@ -7,7 +7,7 @@ var handleLogin = function handleLogin(e) {
     }, 350);
 
     if ($("#user").val() == '' || $("#pass").val() == '') {
-        handleError("RAWR! Username or password is empty");
+        handleError("Username or password is empty");
         return false;
     }
 
@@ -25,12 +25,12 @@ var handleSignup = function handleSignup(e) {
     }, 350);
 
     if ($("#user").val() == '' || $("#pass").val() == '' || $("#pass2").val() == '') {
-        handleError("RAWR! Username or password is empty");
+        handleError(" Username or password is empty");
         return false;
     }
 
     if ($("#pass").val() !== $("#pass2").val()) {
-        handleError("RAWR! Passwords do not match");
+        handleError(" Passwords do not match");
         return false;
     }
 
@@ -156,10 +156,8 @@ $(document).ready(function () {
 "use strict";
 
 var handleError = function handleError(message) {
-    $("#errorMessage").text(message);
-    $("#domoMessage").animate({
-        width: 'toggle'
-    }, 350);
+    alert(message);
+    console.log(message);
 };
 
 var redirect = function redirect(response) {
@@ -170,7 +168,7 @@ var redirect = function redirect(response) {
 };
 
 var sendAjax = function sendAjax(type, action, data, success) {
-    console.log(action);
+
     $.ajax({
         cache: false,
         type: type,

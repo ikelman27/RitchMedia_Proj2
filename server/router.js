@@ -20,6 +20,7 @@ const router = (app) => {
   app.get('/maker', mid.requiresLogin, controllers.Game.makerPage);
 
   app.get('/', mid.requireSecure, mid.requiresLogout, controllers.Account.loginPage);
+  app.get('/*', controllers.Account.notFound);
 };
 
 module.exports = router;

@@ -8,6 +8,7 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
+//class to hold the quiz maker
 var MakerComponent = function (_React$Component) {
     _inherits(MakerComponent, _React$Component);
 
@@ -30,18 +31,17 @@ var MakerComponent = function (_React$Component) {
             _this.title = props.data.name;
         }
 
-        //this.deleteIndex = -1;
-
+        //whenever a child is added set the state to children +1
         _this.onAddChild = function () {
-            //console.log( $("#makerForm").serialize());
+
             _this.setState({
                 numChildren: _this.state.numChildren + 1
             });
-            //this.deleteIndex = -1;
         };
 
+        //delete the last child
         _this.removeChild = function (loc) {
-            //this.deleteIndex = loc;
+
             _this.setState({
                 numChildren: _this.state.numChildren - 1
             });
@@ -49,14 +49,18 @@ var MakerComponent = function (_React$Component) {
         return _this;
     }
 
+    //function to render the maker component
+
+
     _createClass(MakerComponent, [{
         key: "render",
         value: function render() {
             var children = [];
-            var devChild = [];
+            //add number of children to the form
+            //if it isnt an edit use question otherwise use done question
             if (!this.edit) {
                 for (var i = 0; i < this.state.numChildren; i++) {
-                    children.push(React.createElement(Question, { key: i, number: i }));
+                    children.push(React.createElement(Question, { key: i, number: i, className: "test" }));
                 };
                 return React.createElement(
                     Maker,
@@ -79,57 +83,15 @@ var MakerComponent = function (_React$Component) {
     return MakerComponent;
 }(React.Component);
 
-var handleDomo = function handleDomo(e) {
-    e.preventDefault();
+//adds a new game to the server
 
-    $("#domoMessage").animate({
-        width: 'hide'
-    }, 350);
-
-    if ($("#domoName").val() == '' || $("#domoAge").val == '') {
-        handleError('All fields are required');
-        return false;
-    }
-
-    //sendAjax('POST', '/addGame',  $("#domoForm").serialize(), function(param){
-    //   console.log("created game");
-    //loadDomosFromServer();
-    //});
-
-    //sendAjax('POST', $("#domoForm").attr("action"), $("#domoForm").serialize(), function (param) {
-    //   console.log("test");
-    //    loadDomosFromServer();
-    //});
-
-
-    return false;
-};
-/*
-const DomoForm = (props) => {
-    return (
-        <form id="domoForm"
-            onSubmit={handleDomo}
-            action="/maker"
-            method="POST"
-            className="domoForm"
-        >
-            <label htmlFor="name"> Namear: </label>
-            <input id="domoName" type="text" name="name" placeholder="Domo Name" />
-            <label htmlFor="age"> Age: </label>
-            <input id="domoAge" type="text" name="age" placeholder="domo age" />
-            <input type="hidden" name="_csrf" value={props.csrf} />
-            <input className="makeDomoSubmit" type="submit" value="Make Domo" />
-
-        </form>
-    );
-};
-*/
 
 var addGame = function addGame(e) {
     e.preventDefault();
     console.log($("#makerForm").serialize());
     sendAjax('POST', '/createGame', $("#makerForm").serialize(), function (param) {
         console.log("created game");
+        //display data so users dont spam click the button
         ReactDOM.render(React.createElement(
             "div",
             null,
@@ -142,6 +104,7 @@ var addGame = function addGame(e) {
     });
 };
 
+//updates an existing game
 var updateGame = function updateGame(e) {
     e.preventDefault();
     //console.log($("#makerForm").serialize());
@@ -159,11 +122,13 @@ var updateGame = function updateGame(e) {
     });
 };
 
+//clicking the button brings you to the make game form
 function showMaker(csrf) {
 
     ReactDOM.render(React.createElement(MakerComponent, { csrf: csrf, childCount: 1 }), document.querySelector("#domos"));
 };
 
+//views all the games that were created
 function showViewer(csrf) {
     sendAjax('GET', '/listGames', null, function (gameData) {
         var games = gameData.game;
@@ -172,11 +137,13 @@ function showViewer(csrf) {
     });
 }
 
+//display a single game
 function showQuiz(gameData, csrf) {
 
     ReactDOM.render(React.createElement(Quiz, { gameData: gameData, csrf: csrf }), document.querySelector("#domos"));
 }
 
+//sends a request to the server to get a specific game
 function startGame(gameID, csrf) {
     var queryData = {
         csrf: csrf,
@@ -184,51 +151,47 @@ function startGame(gameID, csrf) {
     };
 
     sendAjax('GET', '/getQuiz', queryData, function (gameData) {
-        console.log(gameData);
+        //console.log(gameData);
+        //if the data is valid display the quiz
         if (gameData.valid) {
             showQuiz(gameData.games, csrf);
-        } else {
-            ReactDOM.render(React.createElement(
-                "div",
-                { id: "scoreDIV" },
-                React.createElement(
-                    "h2",
-                    null,
-                    " Sorry you have attempted this quiz too many times"
-                )
-            ), document.querySelector("#domos"));
         }
+        //if the game isn't valid the user has attempted the game to many times
+        else {
+                ReactDOM.render(React.createElement(
+                    "div",
+                    { id: "scoreDIV" },
+                    React.createElement(
+                        "h2",
+                        null,
+                        " Sorry you have attempted this quiz too many times"
+                    )
+                ), document.querySelector("#domos"));
+            }
     });
 }
 
+//request for a specific game then calls maker on that game to view it in the editor mode
 function editGame(gameID, csrf) {
     var queryData = {
         csrf: csrf,
         _id: gameID
     };
     sendAjax('GET', '/getQuiz', queryData, function (gameData) {
-        console.log(gameData.games);
+        //console.log(gameData.games);
         ReactDOM.render(React.createElement(MakerComponent, { csrf: csrf, childCount: gameData.games.rounds.length, edit: true, data: gameData.games }), document.querySelector("#domos"));
     });
 }
 
+//uploads user answers to the server then gets thier score and updades that
 var submitQuiz = function submitQuiz(e) {
     e.preventDefault();
-    //console.log($("#quizForm").serialize());
 
     sendAjax('GET', '/checkAnswers', $("#quizForm").serialize(), function (result) {
-
         var score = { score: result.score, maxScore: result.maxScore };
         var request = $("#quizForm [type=hidden]").serialize() + "&" + $.param(score);
 
-        console.log(request);
-        //var score =  JSON.parse( $("#quizForm [type=hidden]").serialize());
-        //console.log($("#quizForm [type=hidden]").serialize());
-
         sendAjax('POST', '/updateScore', request, function (scores) {
-
-            //console.log(scores);
-
             ReactDOM.render(React.createElement(
                 "div",
                 { id: "scoreDIV" },
@@ -245,6 +208,7 @@ var submitQuiz = function submitQuiz(e) {
     });
 };
 
+//the data to be displayed when the user starts a quiz
 var Quiz = function Quiz(props) {
 
     if (props.gameData.rounds.length === 0) {
@@ -259,23 +223,23 @@ var Quiz = function Quiz(props) {
         );
     }
 
-    //console.log(props.gameData);
+    //loop through each question and display the data
     var i = 0;
     var questionNode = props.gameData.rounds.map(function (round) {
         i++;
         return React.createElement(
             "div",
-            { className: "domo" },
+            { className: "question" },
             React.createElement(
                 "h3",
-                { className: "gameName" },
+                { className: "questionName" },
                 " Question ",
                 i,
                 " "
             ),
             React.createElement(
                 "h3",
-                { className: "gameName" },
+                { className: "questionRound" },
                 " ",
                 round.question,
                 " "
@@ -321,6 +285,7 @@ var Quiz = function Quiz(props) {
         );
     });
 
+    //return the full quiz
     return React.createElement(
         "form",
         { id: "quizForm",
@@ -336,8 +301,8 @@ var Quiz = function Quiz(props) {
     );
 };
 
+//when given a list of items creats the html to display them similar to quiz
 var ViewList = function ViewList(props) {
-
     if (props.games.length === 0) {
         return React.createElement(
             "div",
@@ -379,7 +344,7 @@ var ViewList = function ViewList(props) {
             ),
             React.createElement(
                 "button",
-                { className: "viewer", id: "startQuiz", type: "button", onClick: function onClick() {
+                { id: "startQuiz", type: "button", onClick: function onClick() {
                         return startGame(game._id, props.csrf);
                     } },
                 " Play Game "
@@ -394,6 +359,7 @@ var ViewList = function ViewList(props) {
     );
 };
 
+//displays all of the quizes that a user created similar to quiz
 var User = function User(props) {
     if (props.games.length === 0) {
         return React.createElement(
@@ -409,6 +375,7 @@ var User = function User(props) {
 
     var gameNodes = props.games.map(function (game) {
 
+        //calculate the average score total attempts and number of users who attempted the quiz
         var maxScore = game.rounds.length;
         var totalScores = 0;
         var totalAttempts = 0;
@@ -425,8 +392,6 @@ var User = function User(props) {
         if (totalAttempts > 0) {
             var avereageScore = totalScores / (maxScore * totalAttempts);
         }
-
-        //console.log(avereageScore);
 
         return React.createElement(
             "div",
@@ -477,7 +442,7 @@ var User = function User(props) {
             ),
             React.createElement(
                 "button",
-                { className: "viewer", id: "startQuiz", type: "button", onClick: function onClick() {
+                { id: "startQuiz", type: "button", onClick: function onClick() {
                         return editGame(game._id, props.csrf);
                     } },
                 " Edit Quiz "
@@ -492,8 +457,8 @@ var User = function User(props) {
     );
 };
 
+//create the stats for each user who have attempted a quiz
 var Attempt = function Attempt(props) {
-    console.log(props);
     if (props.attempts.length === 0) {
         return React.createElement(
             "div",
@@ -508,17 +473,14 @@ var Attempt = function Attempt(props) {
 
     var gameNodes = props.attempts.map(function (attempt) {
 
+        //calculate the sats for each user
         var userAve = 0;
         var totalScores = "";
-
         for (var i = 0; i < attempt.scores.length; i++) {
             userAve += attempt.scores[i];
             totalScores += "  " + String(attempt.scores[i] / props.max);
         }
         userAve = userAve / (attempt.scores.length * props.max);
-
-        //console.log(attempt);
-
         return React.createElement(
             "div",
             { className: "domo" },
@@ -567,13 +529,15 @@ var Attempt = function Attempt(props) {
     );
 };
 
+//renders the user stats
 var viewStats = function viewStats(game, avereageScore, maxScore) {
 
     ReactDOM.render(React.createElement(Attempt, { attempts: game.attempts, average: avereageScore, max: maxScore }), document.querySelector("#domos"));
 };
 
+//creates a question in maker that is used for updating a quiz (info pre filled in)
 var DoneQuestion = function DoneQuestion(props) {
-    //console.log(props.data);
+
     var values = {};
     if (props.data !== undefined) {
         values = {
@@ -588,7 +552,7 @@ var DoneQuestion = function DoneQuestion(props) {
     }
     return React.createElement(
         "div",
-        null,
+        { className: "makerQuestion" },
         React.createElement("br", null),
         React.createElement(
             "label",
@@ -610,18 +574,21 @@ var DoneQuestion = function DoneQuestion(props) {
             " Answer 1: "
         ),
         React.createElement("input", { type: "textarea", name: "q" + props.number + "Ans1", className: "questionAns", defaultValue: values.answers[0] }),
+        React.createElement("br", null),
         React.createElement(
             "label",
             { htmlFor: "q" + props.number + "Ans2" },
             " Answer 2: "
         ),
         React.createElement("input", { type: "textarea", name: "q" + props.number + "Ans2", className: "questionAns", defaultValue: values.answers[1] }),
+        React.createElement("br", null),
         React.createElement(
             "label",
             { htmlFor: "q" + props.number + "Ans3" },
             " Answer 3: "
         ),
         React.createElement("input", { type: "textarea", name: "q" + props.number + "Ans3", className: "questionAns", defaultValue: values.answers[2] }),
+        React.createElement("br", null),
         React.createElement(
             "label",
             { htmlFor: "q" + props.number + "Ans4" },
@@ -661,11 +628,12 @@ var DoneQuestion = function DoneQuestion(props) {
     );
 };
 
+//same as done question except info isn't pre filled in
 var Question = function Question(props) {
 
     return React.createElement(
         "div",
-        null,
+        { className: "makerQuestion" },
         React.createElement("br", null),
         React.createElement(
             "label",
@@ -687,18 +655,21 @@ var Question = function Question(props) {
             " Answer 1: "
         ),
         React.createElement("input", { type: "textarea", name: "q" + props.number + "Ans1", className: "questionAns", placeholder: "Enter your Question" }),
+        React.createElement("br", null),
         React.createElement(
             "label",
             { htmlFor: "q" + props.number + "Ans2" },
             " Answer 2: "
         ),
         React.createElement("input", { type: "textarea", name: "q" + props.number + "Ans2", className: "questionAns", placeholder: "Enter your Question" }),
+        React.createElement("br", null),
         React.createElement(
             "label",
             { htmlFor: "q" + props.number + "Ans3" },
             " Answer 3: "
         ),
         React.createElement("input", { type: "textarea", name: "q" + props.number + "Ans3", className: "questionAns", placeholder: "Enter your Question" }),
+        React.createElement("br", null),
         React.createElement(
             "label",
             { htmlFor: "q" + props.number + "Ans4" },
@@ -738,8 +709,10 @@ var Question = function Question(props) {
     );
 };
 
+//creates a quiz constructor 
 var Maker = function Maker(props) {
 
+    //if this is false then its a new quiz 
     if (!props.edit) {
 
         return React.createElement(
@@ -772,88 +745,89 @@ var Maker = function Maker(props) {
                 React.createElement("br", null),
                 React.createElement(
                     "button",
-                    { className: "viewer", id: "MakeClass", type: "button", onClick: props.addChild },
-                    " Add question "
-                ),
-                React.createElement("br", null),
-                React.createElement(
-                    "button",
-                    { className: "viewer", id: "deleteClass", type: "button", onClick: function onClick() {
+                    { id: "deleteQuestion", type: "button", onClick: function onClick() {
                             return props.deleteQuestion(props.number);
                         } },
                     " Delete Last Question "
+                ),
+                React.createElement(
+                    "button",
+                    { id: "makeQuestion", type: "button", onClick: props.addChild },
+                    " Add question "
                 ),
                 React.createElement("br", null),
                 React.createElement("input", { className: "makeDomoSubmit", type: "submit", value: "Create Quiz" })
             )
         );
-    } else {
-        //console.log(props.addChild);
-        return React.createElement(
-            "div",
-            null,
-            React.createElement(
-                "h2",
-                null,
-                " ",
-                React.createElement(
-                    "b",
-                    null,
-                    " Note: "
-                ),
-                " all answers have been reset"
-            ),
-            React.createElement(
-                "h2",
-                null,
-                " Submitting this will reset all attempts "
-            ),
-            React.createElement(
-                "form",
-                { id: "makerForm",
-                    onSubmit: updateGame,
-                    action: "/updateGame",
-                    method: "POST",
-                    className: "makerForm"
-                },
-                React.createElement(
-                    "label",
-                    { htmlFor: "name" },
-                    " Quiz Title: "
-                ),
-                React.createElement("input", { id: "quizName", type: "text", name: "name", defaultValue: props.title }),
-                React.createElement("br", null),
-                React.createElement(
-                    "label",
-                    { htmlFor: "maxAttempts" },
-                    " Max attempts(-1 is infinite): "
-                ),
-                React.createElement("input", { id: "attemptCount", type: "number", name: "maxAttempts", min: "-1", max: "10", defaultValue: "-1" }),
-                React.createElement("input", { type: "hidden", name: "_id", value: props.id }),
-                React.createElement("input", { type: "hidden", name: "_csrf", value: props.csrf }),
-                React.createElement("input", { type: "hidden", name: "count", value: props.count }),
-                props.children,
-                React.createElement("br", null),
-                React.createElement(
-                    "button",
-                    { className: "viewer", id: "MakeClass", type: "button", onClick: props.addChild },
-                    " Add question "
-                ),
-                React.createElement("br", null),
-                React.createElement(
-                    "button",
-                    { className: "viewer", id: "deleteClass", type: "button", onClick: function onClick() {
-                            return props.deleteQuestion(props.number);
-                        } },
-                    " Delete Last Question "
-                ),
-                React.createElement("br", null),
-                React.createElement("input", { className: "makeDomoSubmit", type: "submit", value: "Update Quiz" })
-            )
-        );
     }
+    //otherwise your updating an old quiz so you need to put data in the scene
+    else {
+            return React.createElement(
+                "div",
+                null,
+                React.createElement(
+                    "h2",
+                    null,
+                    " ",
+                    React.createElement(
+                        "b",
+                        null,
+                        " Note: "
+                    ),
+                    " all answers have been reset"
+                ),
+                React.createElement(
+                    "h2",
+                    null,
+                    " Submitting this will reset all attempts "
+                ),
+                React.createElement(
+                    "form",
+                    { id: "makerForm",
+                        onSubmit: updateGame,
+                        action: "/updateGame",
+                        method: "POST",
+                        className: "makerForm"
+                    },
+                    React.createElement(
+                        "label",
+                        { htmlFor: "name" },
+                        " Quiz Title: "
+                    ),
+                    React.createElement("input", { id: "quizName", type: "text", name: "name", defaultValue: props.title }),
+                    React.createElement("br", null),
+                    React.createElement(
+                        "label",
+                        { htmlFor: "maxAttempts" },
+                        " Max attempts(-1 is infinite): "
+                    ),
+                    React.createElement("input", { id: "attemptCount", type: "number", name: "maxAttempts", min: "-1", max: "10", defaultValue: "-1" }),
+                    React.createElement("input", { type: "hidden", name: "_id", value: props.id }),
+                    React.createElement("input", { type: "hidden", name: "_csrf", value: props.csrf }),
+                    React.createElement("input", { type: "hidden", name: "count", value: props.count }),
+                    props.children,
+                    React.createElement("br", null),
+                    React.createElement(
+                        "button",
+                        { id: "MakeClass", type: "button", onClick: props.addChild },
+                        " Add question "
+                    ),
+                    React.createElement("br", null),
+                    React.createElement(
+                        "button",
+                        { id: "deleteClass", type: "button", onClick: function onClick() {
+                                return props.deleteQuestion(props.number);
+                            } },
+                        " Delete Last Question "
+                    ),
+                    React.createElement("br", null),
+                    React.createElement("input", { className: "makeDomoSubmit", type: "submit", value: "Update Quiz" })
+                )
+            );
+        }
 };
 
+//displays the two tabs at the top  
 var MenuUI = function MenuUI(props) {
     return React.createElement(
         "div",
@@ -875,64 +849,22 @@ var MenuUI = function MenuUI(props) {
     );
 };
 
-/*const DomoList = function (props) {
-    if (props.domos.length === 0) {
-        return (
-            <div className="domoList">
-                <h3 className="emptyDomo"> No Domos yet </h3>
-            </div>
-        );
-    }
-
-
-    const domoNodes = props.domos.map(function (domo) {
-        return (
-            <div key={domo._id} className='domo'>
-                <img src="assets/img/domoface.jpeg" alt="domo face" className="domoFace" />
-                <h3 className="domoName"> Name: {domo.name} </h3>
-                <h3 className="domoAge"> Age: {domo.age} </h3>
-            </div>
-        );
-    });
-
-    return (
-        <div className="domoList">
-            {domoNodes}
-        </div>
-    );
-};
-
-const loadDomosFromServer = () => {
-
-    //console.log("test");
-    //sendAjax('GET', '/getGames', null, (data) => {
-    //    console.log(data);
-
-//
-        //console.log($.param(game));
-    //    sendAjax('GET', '/listGames', null, (gameData) => {
-   //         console.log(gameData);
-     //   });
-    //});
-
-
-
-
-};*/
-
+//gets a users page and displays it 
 var showUserPage = function showUserPage(_id, csrf) {
     sendAjax('GET', '/getGames', null, function (data) {
-        console.log(data);
+
         ReactDOM.render(React.createElement(User, { csrf: csrf, games: data.games }), document.querySelector("#domos"));
     });
 };
 
+//run on init
 var setup = function setup(csrf) {
-
+    //display the ui
     ReactDOM.render(React.createElement(MenuUI, { csrf: csrf }), document.querySelector("#DisplayHead"));
 
+    //get all quizes and display them
     sendAjax('GET', '/getUsername', null, function (data) {
-        console.log(data);
+
         ReactDOM.render(React.createElement(
             "h3",
             { id: "profile", onClick: function onClick() {
@@ -957,10 +889,8 @@ $(document).ready(function () {
 "use strict";
 
 var handleError = function handleError(message) {
-    $("#errorMessage").text(message);
-    $("#domoMessage").animate({
-        width: 'toggle'
-    }, 350);
+    alert(message);
+    console.log(message);
 };
 
 var redirect = function redirect(response) {

@@ -1,3 +1,5 @@
+// most of this was pre done in domomaker
+
 const models = require('../models');
 const Account = models.Account;
 
@@ -5,7 +7,10 @@ const loginPage = (req, res) => {
   res.render('login', { csrfToken: req.csrfToken() });
 };
 
-
+// render the 404 page
+const notFound = (req, res) => {
+  res.render('404');
+};
 const logout = (req, res) => {
   req.session.destroy();
   res.redirect('/');
@@ -93,6 +98,7 @@ const signup = (request, response) => {
   });
 };
 
+// gets a username
 const getUsername = (req, res) => {
   res.json(req.session.account);
 };
@@ -109,6 +115,7 @@ const getToken = (request, response) => {
   // console.log(csrfJSON);
 };
 
+module.exports.notFound = notFound;
 module.exports.getUsername = getUsername;
 module.exports.loginPage = loginPage;
 module.exports.login = login;
