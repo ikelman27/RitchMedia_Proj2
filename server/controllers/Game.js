@@ -3,7 +3,7 @@ const Game = models.Game;
 
 // displays the page with all the games after login
 const makerPage = (req, res) => {
-  Game.GameModel.getIntros(null, (err, docs) => {
+  Game.GameModel.getIntros(20, (err, docs) => {
     if (err) {
       return res.status(400).json({
         error: 'an error occoured',
@@ -23,6 +23,7 @@ const createGame = (req, res) => {
       error: 'A title and questions are requiored',
     });
   }
+
 
   const keys = Object.keys(req.body);
 
@@ -247,12 +248,16 @@ const checkAnswers = (req, res) => {
 };
 
 // display all games by their intro aka name question length and title
-const listGames = (req, res) => Game.GameModel.getIntros(null, (err, docs) => {
-  const game = docs;
-  return res.json({
-    game,
+const listGames = (req, res) => {
+  const index = parseInt(req.query.startIndex, 10);
+
+  Game.GameModel.getIntros(index, (err, docs) => {
+    const game = docs;
+    return res.json({
+      game,
+    });
   });
-});
+};
 
 // gets all the data for a users games
 const getGame = (req, res) => Game.GameModel.findByOwner(req.session.account._id, (err, docs) => {
@@ -262,7 +267,7 @@ const getGame = (req, res) => Game.GameModel.findByOwner(req.session.account._id
       error: 'An error occured',
     });
   }
- 
+
   return res.json({
     games: docs,
   });

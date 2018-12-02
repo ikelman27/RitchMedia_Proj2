@@ -125,15 +125,63 @@ var updateGame = function updateGame(e) {
 //clicking the button brings you to the make game form
 function showMaker(csrf) {
 
-    ReactDOM.render(React.createElement(MakerComponent, { csrf: csrf, childCount: 1 }), document.querySelector("#domos"));
+    sendAjax('GET', '/getGames', null, function (data) {
+        sendAjax('GET', '/premium', null, function (premium) {
+            if (premium == false && data.games.length >= 10) {
+                ReactDOM.render(React.createElement(
+                    "div",
+                    null,
+                    React.createElement(
+                        "h3",
+                        null,
+                        " You have created the maximum number of games "
+                    ),
+                    React.createElement(
+                        "p",
+                        null,
+                        " If you would like to create more games you can delete old games, or you can create a premium account. Click the link below or go premium at the top of the page to make a premium account"
+                    ),
+                    React.createElement(
+                        "button",
+                        { id: "paymentButton", onClick: showPaymentPage },
+                        " Go Premium "
+                    )
+                ), document.querySelector("#domos"));
+            } else {
+                ReactDOM.render(React.createElement(MakerComponent, { csrf: csrf, childCount: 1 }), document.querySelector("#domos"));
+            }
+        });
+    });
 };
 
 //views all the games that were created
 function showViewer(csrf) {
-    sendAjax('GET', '/listGames', null, function (gameData) {
+    sendAjax('GET', '/listGames', "startIndex=" + 20, function (gameData) {
         var games = gameData.game;
 
-        ReactDOM.render(React.createElement(ViewList, { csrf: csrf, games: games }), document.querySelector("#domos"));
+        ReactDOM.render(React.createElement(
+            "div",
+            null,
+            React.createElement(SearchMenu, { csrf: csrf }),
+            React.createElement(ViewList, { id: "gameViews", csrf: csrf, games: games })
+        ), document.querySelector("#domos"));
+    });
+}
+
+function loadMore(csrf) {
+    //do appendreact dom
+    var elementsLoaded = document.getElementById('viewerList').childElementCount;
+    elementsLoaded += 20;
+    console.log('elem Loaded:   ' + elementsLoaded);
+    sendAjax('GET', '/listGames', "startIndex=" + elementsLoaded, function (gameData) {
+        var games = gameData.game;
+
+        ReactDOM.render(React.createElement(
+            "div",
+            null,
+            React.createElement(SearchMenu, { csrf: csrf }),
+            React.createElement(ViewList, { id: "gameViews", csrf: csrf, games: games })
+        ), document.querySelector("#domos"));
     });
 }
 
@@ -352,10 +400,35 @@ var ViewList = function ViewList(props) {
         );
     });
 
+    console.log(props.games.length);
+
+    if (props.games.length % 20 === 0) {
+        return React.createElement(
+            "div",
+            { id: "viewDiv" },
+            React.createElement(
+                "div",
+                { className: "domoList", id: "viewerList" },
+                gameNodes
+            ),
+            React.createElement(
+                "button",
+                { id: "loadMore", onClick: function onClick() {
+                        return loadMore(props.csrf);
+                    } },
+                " Load more quizes "
+            )
+        );
+    }
+
     return React.createElement(
         "div",
-        { className: "domoList" },
-        gameNodes
+        null,
+        React.createElement(
+            "div",
+            { className: "domoList", id: "viewerList" },
+            gameNodes
+        )
     );
 };
 
@@ -857,14 +930,117 @@ var showUserPage = function showUserPage(_id, csrf) {
     });
 };
 
+var showPaymentPage = function showPaymentPage() {
+    ReactDOM.render(React.createElement(
+        "div",
+        null,
+        React.createElement(
+            "h2",
+            null,
+            " Become a premium user"
+        ),
+        React.createElement(
+            "p",
+            null,
+            " Becoming a premium user provides a number of benafits that enhance your experence. Right now the main benafit is unlimmeted access to creating quizes, but in the future we plan to add more benifits to the premium experence."
+        ),
+        React.createElement(
+            "form",
+            { action: "https://www.paypal.com/cgi-bin/webscr", method: "post", "class": "donate", target: "_blank", id: "PaymentButton" },
+            React.createElement("input", { type: "hidden", name: "cmd", value: "_donations" }),
+            React.createElement("input", { type: "hidden", name: "business", value: "X7VSXQ32CJLK2" }),
+            React.createElement("input", { type: "hidden", name: "currency_code", value: "USD" }),
+            React.createElement("input", { type: "image", id: "donateButton", src: "https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif", border: "0", name: "submit", title: "PayPal - The safer, easier way to pay online!",
+                alt: "Donate with PayPal button" })
+        )
+    ), document.querySelector("#domos"), function () {
+        document.getElementById('PaymentButton').onclick = function () {
+
+            getToken(setPremiumUser);
+        };
+    });
+};
+
+var setPremiumUser = function setPremiumUser(csrf) {
+
+    console.log(csrf);
+    sendAjax('POST', '/premium', "_csrf=" + csrf, function (newData) {
+        console.log(newData);
+    });
+};
+
+var showDonationPage = function showDonationPage() {
+    ReactDOM.render(React.createElement(
+        "form",
+        { action: "https://www.paypal.com/cgi-bin/webscr", method: "post", "class": "donate", target: "_blank", id: "PaymentButton" },
+        React.createElement("input", { type: "hidden", name: "cmd", value: "_donations" }),
+        React.createElement("input", { type: "hidden", name: "business", value: "X7VSXQ32CJLK2" }),
+        React.createElement("input", { type: "hidden", name: "currency_code", value: "USD" }),
+        React.createElement("input", { type: "image", id: "donateButton", src: "https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif", border: "0", name: "submit", title: "PayPal - The safer, easier way to pay online!",
+            alt: "Donate with PayPal button" })
+    ), document.querySelector("#domos"));
+
+    document.getElementById('PaymentButton').onclick = function () {
+        getToken(setPremiumUser);
+    };
+};
+
+var SearchMenu = function SearchMenu(props) {
+    console.log('testss');
+    return React.createElement(
+        "form",
+        { id: "searchForm" },
+        React.createElement(
+            "label",
+            { htmlFor: "quizName" },
+            " Quiz Name: "
+        ),
+        React.createElement("input", { type: "textarea", name: "quizName" }),
+        React.createElement("br", null),
+        React.createElement(
+            "label",
+            { htmlFor: "userName" },
+            " User name: "
+        ),
+        React.createElement("input", { type: "textarea", name: "userName" }),
+        React.createElement("br", null),
+        React.createElement(
+            "label",
+            { htmlFor: "maxAttempts" },
+            " max number of attemps: "
+        ),
+        React.createElement("input", { type: "number", name: "maxAttempts", min: "-1", max: "10", defaultValue: "-1" }),
+        React.createElement("br", null),
+        React.createElement(
+            "label",
+            { htmlFor: "maxQuestions" },
+            " max number of Questions: "
+        ),
+        React.createElement("input", { type: "number", name: "maxQuestions", min: "-1", defaultValue: "-1" }),
+        React.createElement("br", null),
+        React.createElement(
+            "label",
+            { htmlFor: "minQuestions" },
+            " min number of Questions: "
+        ),
+        React.createElement("input", { type: "number", name: "minQuestions", min: "1", defaultValue: "1" }),
+        React.createElement("br", null),
+        React.createElement(
+            "button",
+            { id: "querySearch" },
+            " Search "
+        )
+    );
+};
+
 //run on init
 var setup = function setup(csrf) {
-    //display the ui
+
     ReactDOM.render(React.createElement(MenuUI, { csrf: csrf }), document.querySelector("#DisplayHead"));
 
     //get all quizes and display them
     sendAjax('GET', '/getUsername', null, function (data) {
-
+        console.log(data);
         ReactDOM.render(React.createElement(
             "h3",
             { id: "profile", onClick: function onClick() {
@@ -872,19 +1048,32 @@ var setup = function setup(csrf) {
                 } },
             data.username
         ), document.querySelector("#userProfile"));
+
+        sendAjax('GET', '/premium', null, function (data) {
+            console.log(data);
+            if (data == true) {
+
+                document.getElementById('paymentLink').innerHTML = 'premium user';
+                document.getElementById('paymentLink').onclick = showDonationPage;
+            } else {
+                document.getElementById('paymentLink').innerHTML = 'Go Premium';
+                document.getElementById('paymentLink').onclick = showPaymentPage;
+            }
+        });
     });
 
     showViewer(csrf);
 };
 
-var getToken = function getToken() {
+var getToken = function getToken(callback) {
     sendAjax('GET', '/getToken', null, function (result) {
-        setup(result.csrfToken);
+
+        return callback(result.csrfToken);
     });
 };
 
 $(document).ready(function () {
-    getToken();
+    var csrf = getToken(setup);
 });
 "use strict";
 

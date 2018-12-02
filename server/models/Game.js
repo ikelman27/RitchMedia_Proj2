@@ -1,5 +1,3 @@
-
-
 const mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
 
@@ -141,29 +139,40 @@ const GameSchema = new mongoose.Schema({
 
 
 GameSchema.statics.getAnswers = (id, callback) =>
-GameModel.findById(id, 'rounds.result').exec(callback);
+  GameModel.findById(id, 'rounds.result').exec(callback);
 
 
 GameSchema.statics.getAllAttemtps = (id, callback) =>
-GameModel.findById(id, 'attempts').exec(callback);
+  GameModel.findById(id, 'attempts').exec(callback);
 
 
 // returns the name rounds and creator
-GameSchema.statics.getIntros = (id, callback) => GameModel.aggregate([{
-  $project: {
-    name: '$name',
-    length: {
-      $size: '$rounds',
+GameSchema.statics.getIntros = (index, callback) => {
+  console.log(index);
+  GameModel.aggregate([{
+    $project: {
+      name: '$name',
+      length: {
+        $size: '$rounds',
+      },
+      creator: '$creator',
+      creatorUsername: '$creatorUsername',
     },
-    creator: '$creator',
-    creatorUsername: '$creatorUsername',
   },
-}]).exec(callback);
+  {
+    $limit: index,
+  },
+  {
+    $skip: 0,
+  },
+
+  ]).exec(callback);
+};
 
 // gets the data for a single quiz to take
 GameSchema.statics.getQuiz = (id, callback) => GameModel.findById(id,
-'name creator rounds.question rounds.answer1 rounds.answer2 rounds.answer3 \n' +
-'rounds.answer4 creator attempts maxAttempts').exec(callback);
+  'name creator rounds.question rounds.answer1 rounds.answer2 rounds.answer3 \n' +
+  'rounds.answer4 creator attempts maxAttempts').exec(callback);
 
 // gets all games from one person
 GameSchema.statics.findByOwner = (ownerId, callback) => {

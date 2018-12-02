@@ -27,6 +27,7 @@
   "author": "Cody Van De Mark",
   "license": "Apache 2.0",
   "dependencies": {
+    "append-react-dom": "^1.0.1",
     "body-parser": "^1.15.0",
     "compression": "^1.6.1",
     "connect-redis": "^3.0.2",

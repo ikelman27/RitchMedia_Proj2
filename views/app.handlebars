@@ -2,7 +2,7 @@
 
 <head>
   <meta charset="utf-8" />
-  <title>Trivia Games</title>
+  <title>Questionair</title>
   <script crossorigin src="https://unpkg.com/react@15/dist/react.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@15/dist/react-dom.min.js"></script>
   <script crossorigin src="https://unpkg.com/prop-types/prop-types.min.js"></script>
@@ -22,14 +22,14 @@
     </a>
     <div class="navlink">
       
-      <h3 id="userProfile">Profile</h3>
+      <h3 id="userProfile">Profile</h3> 
+      
       <a href="/logout" id="logout" >Log out</a>
+      <h3 id='paymentLink'>Go premium</h3>
     </div>
   </nav>
   <section id="DisplayHead">
 
-  </section>
-  <section id="makeDomo">
   </section>
   <section id="domos">
   </section>
@@ -37,17 +37,5 @@
   <script src="/assets/bundle.js"></script>
   
 </body>
-<footer>
-    
-    <form action="https://www.paypal.com/cgi-bin/webscr" method="post" class="donate" target="_blank">
-      <input type="hidden" name="cmd" value="_donations" />
-      <input type="hidden" name="business" value="X7VSXQ32CJLK2" />
-      <input type="hidden" name="currency_code" value="USD" />
-      <input type="image" id='donateButton' src="https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif" border="0" name="submit" title="PayPal - The safer, easier way to pay online!"
-        alt="Donate with PayPal button" />
-    
-    </form>
-
-  </footer>
 
 </html>

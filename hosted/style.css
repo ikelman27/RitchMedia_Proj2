@@ -5,11 +5,9 @@ body {
     margin: 0;
     padding: 0;
     overflow-x: hidden;
+    background: lightgray;
 }
 
-body {
-    height: 92%;
-}
 
 footer {
     position: absolute;
@@ -22,7 +20,27 @@ footer {
 
 #loginNav {
 
-    padding-left: 25%;
+    padding-left: 5%;
+    height: 100px;
+    
+}
+
+#searchMenu{
+    padding-left: 5%;
+    padding-top: 10px;
+    margin-bottom: 25px;
+}
+
+#searchForm{
+    margin-left: -10%;
+    padding-left: 10%;
+    margin-right: -10%;
+    padding-right: 10%;
+    background-color: #66bdff;
+    padding-bottom: 25px;
+    padding-top: 25px;
+    border-bottom: 2px solid black;
+
 }
 
 .donate {
@@ -45,7 +63,12 @@ footer {
     padding-bottom: 10px;
 }
 
-
+#title{
+    font-weight: 700;
+    padding-top: 10px;
+    display: block;
+    margin: 0px 0px 0px 0px !important;
+}
 
 #MakeClass {
     float: left;
@@ -58,7 +81,7 @@ footer {
 }
 
 #displayHead {
-    margin-top: 15px;
+    
     text-align: center;
 }
 
@@ -109,7 +132,7 @@ nav:nth-child(1) {
 
 #navButtonLogin {
     text-align: center;
-    width: 20% !important;
+    width: auto !important;
 }
 
 .navlink {
@@ -300,6 +323,18 @@ nav:nth-child(1) {
     transform: rotate(330deg);
 }
 
+#paymentLink{
+    float: right;
+    margin-right: 5%;
+    margin-top: 0;
+}
+
+#paymentLink:hover{
+    color:red;
+    cursor: pointer;
+
+}
+
 #makerForm{
     width: 100%;
     
@@ -349,12 +384,15 @@ nav:nth-child(1) {
 
 #domos {
     max-width: 1400;
-    width: 90%;
+    padding-left: 5%;
+    padding-right: 5%;
     min-width: 400px;
-   
+    padding-top: 50px;
     margin: 0 auto;
-    margin-top: 100px;
+    
 }
+
+
 
 .domo {
     width: 45%;

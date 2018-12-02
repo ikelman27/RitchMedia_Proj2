@@ -96,7 +96,6 @@ var signupWindow = function signupWindow(props) {
     );
 };
 
-//!--- Question for wednesday query selector jquery
 var createLoginWindow = function createLoginWindow(csrf) {
     ReactDOM.render(React.createElement(loginWindow, { csrf: csrf }), document.querySelector("#content"));
 };
@@ -104,24 +103,6 @@ var createLoginWindow = function createLoginWindow(csrf) {
 var createSignupWindow = function createSignupWindow(csrf) {
     ReactDOM.render(React.createElement(signupWindow, { csrf: csrf }), document.querySelector("#content"));
 };
-
-/*
-This
-const createSignupWindow = (csrf) => {
-    ReactDOM.render(
-        <signupWindow csrf={csrf} />,
-        document.querySelector("#content")
-    );
-};
-
-Turns into this with quotes
-const createSignupWindow = (csrf) => {
-    ReactDOM.render(React.createElement("signupWindow", { csrf: csrf }),
-        document.querySelector("#content")
-    );
-};
-
-*/
 
 var setup = function setup(csrf) {
     var loginButton = document.querySelector("#loginButton");
