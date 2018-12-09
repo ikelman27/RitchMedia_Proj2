@@ -114,6 +114,7 @@ const updateGame = (req, res) => {
     docs.set(game);
 
     docs.save((newErr, updatedGame) => {
+      console.log(updatedGame);
     });
   });
   // note if the user immediately clicks the game it may not have time to update
