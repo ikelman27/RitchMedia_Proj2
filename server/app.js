@@ -12,7 +12,6 @@ const session = require('express-session');
 const RedisStore = require('connect-redis')(session);
 const url = require('url');
 const csrf = require('csurf');
-const appendReactDom = require('append-react-dom');
 
 
 const port = process.env.PORT || process.env.NODE_PORT || 3000;
@@ -26,8 +25,6 @@ mongoose.connect(dbURL, (err) => {
     throw err;
   }
 });
-
-
 
 
 let redisURL = {
@@ -73,7 +70,6 @@ app.engine('handlebars', expressHandlebars({ defaultLayout: 'main' }));
 app.set('view engine', 'handlebars');
 app.set('views', `${__dirname}/../views`);
 
-app.use(appendReactDom());
 app.use(cookieParser());
 app.use(csrf());
 app.use((err, req, res, next) => {

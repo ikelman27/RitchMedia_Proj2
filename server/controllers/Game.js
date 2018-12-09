@@ -114,7 +114,6 @@ const updateGame = (req, res) => {
     docs.set(game);
 
     docs.save((newErr, updatedGame) => {
-      console.log(updatedGame);
     });
   });
   // note if the user immediately clicks the game it may not have time to update
@@ -177,7 +176,6 @@ const addAttempt = (userID, userName, gameID, game, score, callback) => {
 
   // if they aren't in the attmpts add them
   if (index === -1) {
-    console.log('new player');
     const attempt = {
       game: gameID,
       player: userID,
