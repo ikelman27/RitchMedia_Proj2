@@ -21,7 +21,7 @@ footer {
 #loginNav {
 
     padding-left: 5%;
-    height: 100px;
+    height: 120px;
     
 }
 
@@ -38,9 +38,18 @@ footer {
     padding-right: 10%;
     background-color: #66bdff;
     padding-bottom: 25px;
-    padding-top: 25px;
+    
     border-bottom: 2px solid black;
 
+}
+
+#searchDiv{
+    margin-left: -10%;
+    padding-left: 10%;
+    margin-right: -10%;
+    padding-right: 10%;
+    padding-top: 25px;
+    background-color: #66bdff;
 }
 
 .donate {
@@ -64,11 +73,32 @@ footer {
 }
 
 #title{
+    text-decoration: none;
     font-weight: 700;
     padding-top: 10px;
     display: block;
     margin: 0px 0px 0px 0px !important;
 }
+
+#title2{
+    color: black;
+    text-decoration: none;
+    font-weight: 700;
+    padding-top: 10px;
+    display: inline;
+    margin: 0px 0px 0px 0px !important;
+}
+
+#title2:hover{
+    color: white !important;
+}
+
+#homeButton{
+    text-decoration: none;
+    
+}
+
+
 
 #MakeClass {
     float: left;
@@ -85,8 +115,21 @@ footer {
     text-align: center;
 }
 
+#makerLink{
+    float: right;
+    margin-right: 5%;
+    margin-top: 0;
+}
+
+#makerNav:hover{
+    color:red;
+    
+    cursor: pointer;
+}
+
 #userProfile {
     cursor: pointer;
+    margin-left: 200px;
 
 }
 
@@ -149,7 +192,6 @@ nav:nth-child(1) {
 .navlink h3 {
     display: inline;
     margin-left: 10px;
-    margin-right: 100px;
 }
 
 .navlink a,
@@ -167,8 +209,8 @@ nav:nth-child(1) {
 }
 
 .navlink a:hover {
-    transition: background-color 0.8s ease;
-    background-color: #66bdff;
+    
+    color: rgb(231, 97, 97);
 }
 
 .domoForm {
@@ -196,11 +238,11 @@ nav:nth-child(1) {
 }
 
 .makeDomoSubmit {
-    transition: background-color 0.4s ease;
+
     display: inline;
     
-    background-color: #55acee;
-    border-radius: 2px;
+    background-color: #c50000;
+    border-radius: 6px;
     color: white;
     text-decoration: none;
 }
@@ -213,8 +255,8 @@ nav:nth-child(1) {
 }
 
 .makeDomoSubmit:hover {
-    transition: background-color 0.4s ease;
-    background-color: #338acc;
+    
+    background-color: #eb214d;
 }
 
 .mainForm {
@@ -387,7 +429,7 @@ nav:nth-child(1) {
     padding-left: 5%;
     padding-right: 5%;
     min-width: 400px;
-    padding-top: 50px;
+
     margin: 0 auto;
     
 }

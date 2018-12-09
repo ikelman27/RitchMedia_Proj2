@@ -1,4 +1,4 @@
-
+var Session_csrf;
 //class to hold the quiz maker
 class MakerComponent extends React.Component {
     constructor(props) {
@@ -126,15 +126,11 @@ function showMaker(csrf) {
 
 };
 
-//views all the games that were created
+//views all the games that were created Only gets the first 20 items for now
 function showViewer(csrf) {
     sendAjax('GET', '/listGames', `startIndex=${20}`, (gameData) => {
         var games = gameData.game;
-
         
-            
-        
-
         ReactDOM.render(
             <div>
             <SearchMenu csrf={csrf} />
@@ -145,14 +141,14 @@ function showViewer(csrf) {
     });
 }
 
+//loads another 20 items to the viewer from the server
 function loadMore(csrf){
-    //do appendreact dom
+    //get the current number of quizes and increase it by 20
     var elementsLoaded = document.getElementById('viewerList').childElementCount;
     elementsLoaded += 20;
-    console.log('elem Loaded:   ' + elementsLoaded);
+    //get all the games from the server from the new index
     sendAjax('GET', '/listGames', `startIndex=${elementsLoaded}`, (gameData) => {
         var games = gameData.game;
-
         ReactDOM.render(
             <div>
             <SearchMenu csrf={csrf} />
@@ -216,7 +212,7 @@ function editGame(gameID, csrf) {
 const submitQuiz = (e) => {
     e.preventDefault();
     
-
+    //get the score and then send an update to post that score to the server
     sendAjax('GET', '/checkAnswers', $("#quizForm").serialize(), (result) => {
         var score = { score: result.score, maxScore: result.maxScore };
         var request = $("#quizForm [type=hidden]").serialize() + "&" + $.param(score);
@@ -308,12 +304,19 @@ const ViewList = (props) => {
     }
 
     const gameNodes = props.games.map(function (game) {
+        //if the max attempts are -1 there are infinite attempts avalible
+        var maxAttempts = game.maxAttempts;
+        if(maxAttempts == -1){
+            maxAttempts = 'infinite'
+        };
+
         return (
             <div key={game._id} className='domo' >
 
                 <h3 className="gameName" onClick={() => startGame(game._id, props.csrf)}> Name: {game.name} </h3>
                 <h3 className="gameAge"> Questions: {game.length} </h3>
                 <h3 className="gameCreator"> Creator: {game.creatorUsername} </h3>
+                <h3 classname="gameAge"> Max attempts: {maxAttempts} </h3>
                 <button id="startQuiz" type="button" onClick={() => startGame(game._id, props.csrf)}> Play Game </button>
 
             </div>
@@ -321,29 +324,24 @@ const ViewList = (props) => {
     });
 
 
-    console.log(props.games.length);
-
+    
+    //if there are more quizes to load display the load more button
     if(props.games.length %20 === 0){
         return (
             <div id='viewDiv'>
                 <div className="domoList"  id="viewerList" >
-                    {gameNodes}
-
-                    
+                    {gameNodes}                    
                 </div>
                 <button id="loadMore" onClick={() => loadMore(props.csrf)}> Load more quizes </button>
             </div>
         );
     }
-    
+    //oterwise just return the list
     return (
-        <div>
+        <div id ='viewDiv'>
         <div className="domoList" id='viewerList'>
             {gameNodes}
-            
-            
         </div> 
-        
         </div>
     );
 }
@@ -627,7 +625,7 @@ const showUserPage = function (_id, csrf) {
     });
 };
 
-
+//shows the page where a user can become a premium user When they click on the link set them to premium status
 const showPaymentPage = function(){
     ReactDOM.render(
         <div>
@@ -651,38 +649,76 @@ const showPaymentPage = function(){
     
 };
 
+//sets a user as a premium user
 const setPremiumUser = (csrf) => {
     
-    console.log(csrf);
+    
     sendAjax('POST', '/premium', `_csrf=${csrf}`, (newData) =>{
         console.log(newData);
     });
 }
 
-
+//
 const showDonationPage = function(){
     ReactDOM.render(
+        <div>
+        <h2> Thanks you for supporting us</h2>
+        <p> You have already supported us by becoming a premium user. If you would like to support this website more you can donate to help improve the website.
+        </p>
         <form action="https://www.paypal.com/cgi-bin/webscr" method="post" class="donate" target="_blank" id='PaymentButton'>
         <input type="hidden" name="cmd" value="_donations" />
         <input type="hidden" name="business" value="X7VSXQ32CJLK2" />
         <input type="hidden" name="currency_code" value="USD" />
         <input type="image" id='donateButton' src="https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif" border="0" name="submit" title="PayPal - The safer, easier way to pay online!"
         alt="Donate with PayPal button" />
-    </form>, document.querySelector("#domos")
+    </form>
+    </div>, document.querySelector("#domos")
 
     );
 
-    document.getElementById('PaymentButton').onclick = () =>{
-        getToken(setPremiumUser);
-    };
+   
+};
+
+//searches through created games with several queries
+const searchForGames =(e) =>{
+    e.preventDefault();
+    
+    //If the min questions is more than the max questions print an error and return
+    if(document.getElementById("minQuestions").value > document.getElementById("maxQuestions").value && document.getElementById("maxQuestions").value > -1){
+        alert("Min questions must be less than max questions");
+    }
+    //otherwise search for games with the specified chriteria
+    else{
+    sendAjax('GET', '/searchGames', $("#searchForm").serialize(), (data) => {
+        if(document.querySelector('#loadMore') !== null){
+            document.querySelector('#loadMore').style.display = "none";
+        }
+        
+        
+
+        ReactDOM.render(
+            <div>
+            
+            <SearchMenu csrf={Session_csrf} />
+            <h3> {data.game.length} Quizes Found </h3>
+            <ViewList id='gameViews' csrf={Session_csrf} games={data.game} />
+            </div>, document.querySelector("#domos")
+        );
+    });
+}
 };
 
 
+//creates the form to search for questions
 const SearchMenu = (props) => {
-    console.log('testss');
+    
     return  (
+        <div id='searchDiv'>
+            <h2> Quiz Search </h2>
+        <form id="searchForm"
+        onSubmit={searchForGames}
+        >
 
-        <form id="searchForm">
             <label htmlFor='quizName'> Quiz Name: </label>
             <input type="textarea" name='quizName'/>
             <br/>
@@ -690,27 +726,34 @@ const SearchMenu = (props) => {
             <input type="textarea" name='userName'/>
             <br/>
             <label htmlFor='maxAttempts'> max number of attemps: </label>
-            <input  type="number" name="maxAttempts" min="-1" max="10" defaultValue="-1" />
+            <input  type="number" id="maxAttempts" name="maxAttempts" min="-1" max="10" defaultValue="-1" />
             <br/>
             <label htmlFor='maxQuestions'> max number of Questions: </label>
-            <input  type="number" name="maxQuestions" min="-1" defaultValue="-1" />
+            <input  type="number" id="maxQuestions" name="maxQuestions" min="-1" defaultValue="-1" />
             <br/>
             <label htmlFor='minQuestions'> min number of Questions: </label>
-            <input  type="number" name="minQuestions" min="1" defaultValue="1" />
+            <input  type="number" id="minQuestions" name="minQuestions" min="1" defaultValue="1" />
             <br/>
-            <button id='querySearch'> Search </button>
+            <input type="submit"/> 
         </form>
+        </div>
     );
 }
 
+//renders the maker link in the header
+const MakerNav = (props) => {
+    return (
+            <a  id="makerNav" onClick={() => showMaker(props.csrf)}> Make a new Quiz </a>
+    );
+};
 
 //run on init
 const setup = function (csrf) {
     
+   
     ReactDOM.render(
-        <MenuUI csrf={csrf} />, document.querySelector("#DisplayHead")
-    );
-
+        <MakerNav csrf={csrf} />, document.querySelector("#makerLink")
+    )
     
 
 
@@ -741,9 +784,10 @@ const setup = function (csrf) {
     showViewer(csrf);
 };
 
+//gets the csrf token and runs a callback function with csrf
 const getToken = (callback) => {
     sendAjax('GET', '/getToken', null, (result) => {
-       
+        Session_csrf = result.csrfToken;
         return callback( result.csrfToken);
     });
 };

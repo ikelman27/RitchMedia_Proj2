@@ -88,8 +88,6 @@ const signup = (request, response) => {
     });
 
     savePromise.catch((err) => {
-      console.log(err);
-
       if (err.code === 11000) {
         return res.status(400).json({
           error: 'Username already in use',
@@ -106,7 +104,6 @@ const signup = (request, response) => {
 
 const getPremium = (req, res) => {
   Account.AccountModel.findById(req.session.account, (err, user) => {
-    console.log(user.premiumUser);
     res.json(user.premiumUser);
   });
 };
@@ -135,7 +132,6 @@ const getToken = (request, response) => {
   };
 
   res.json(csrfJSON);
-  // console.log(csrfJSON);
 };
 
 module.exports.setPremium = setPremium;

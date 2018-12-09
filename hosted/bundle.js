@@ -8,7 +8,9 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
+var Session_csrf;
 //class to hold the quiz maker
+
 var MakerComponent = function (_React$Component) {
     _inherits(MakerComponent, _React$Component);
 
@@ -154,7 +156,7 @@ function showMaker(csrf) {
     });
 };
 
-//views all the games that were created
+//views all the games that were created Only gets the first 20 items for now
 function showViewer(csrf) {
     sendAjax('GET', '/listGames', "startIndex=" + 20, function (gameData) {
         var games = gameData.game;
@@ -168,14 +170,14 @@ function showViewer(csrf) {
     });
 }
 
+//loads another 20 items to the viewer from the server
 function loadMore(csrf) {
-    //do appendreact dom
+    //get the current number of quizes and increase it by 20
     var elementsLoaded = document.getElementById('viewerList').childElementCount;
     elementsLoaded += 20;
-    console.log('elem Loaded:   ' + elementsLoaded);
+    //get all the games from the server from the new index
     sendAjax('GET', '/listGames', "startIndex=" + elementsLoaded, function (gameData) {
         var games = gameData.game;
-
         ReactDOM.render(React.createElement(
             "div",
             null,
@@ -235,6 +237,7 @@ function editGame(gameID, csrf) {
 var submitQuiz = function submitQuiz(e) {
     e.preventDefault();
 
+    //get the score and then send an update to post that score to the server
     sendAjax('GET', '/checkAnswers', $("#quizForm").serialize(), function (result) {
         var score = { score: result.score, maxScore: result.maxScore };
         var request = $("#quizForm [type=hidden]").serialize() + "&" + $.param(score);
@@ -364,6 +367,12 @@ var ViewList = function ViewList(props) {
     }
 
     var gameNodes = props.games.map(function (game) {
+        //if the max attempts are -1 there are infinite attempts avalible
+        var maxAttempts = game.maxAttempts;
+        if (maxAttempts == -1) {
+            maxAttempts = 'infinite';
+        };
+
         return React.createElement(
             "div",
             { key: game._id, className: "domo" },
@@ -391,6 +400,13 @@ var ViewList = function ViewList(props) {
                 " "
             ),
             React.createElement(
+                "h3",
+                { classname: "gameAge" },
+                " Max attempts: ",
+                maxAttempts,
+                " "
+            ),
+            React.createElement(
                 "button",
                 { id: "startQuiz", type: "button", onClick: function onClick() {
                         return startGame(game._id, props.csrf);
@@ -400,8 +416,7 @@ var ViewList = function ViewList(props) {
         );
     });
 
-    console.log(props.games.length);
-
+    //if there are more quizes to load display the load more button
     if (props.games.length % 20 === 0) {
         return React.createElement(
             "div",
@@ -420,10 +435,10 @@ var ViewList = function ViewList(props) {
             )
         );
     }
-
+    //oterwise just return the list
     return React.createElement(
         "div",
-        null,
+        { id: "viewDiv" },
         React.createElement(
             "div",
             { className: "domoList", id: "viewerList" },
@@ -930,6 +945,7 @@ var showUserPage = function showUserPage(_id, csrf) {
     });
 };
 
+//shows the page where a user can become a premium user When they click on the link set them to premium status
 var showPaymentPage = function showPaymentPage() {
     ReactDOM.render(React.createElement(
         "div",
@@ -961,82 +977,144 @@ var showPaymentPage = function showPaymentPage() {
     });
 };
 
+//sets a user as a premium user
 var setPremiumUser = function setPremiumUser(csrf) {
 
-    console.log(csrf);
     sendAjax('POST', '/premium', "_csrf=" + csrf, function (newData) {
         console.log(newData);
     });
 };
 
+//
 var showDonationPage = function showDonationPage() {
     ReactDOM.render(React.createElement(
-        "form",
-        { action: "https://www.paypal.com/cgi-bin/webscr", method: "post", "class": "donate", target: "_blank", id: "PaymentButton" },
-        React.createElement("input", { type: "hidden", name: "cmd", value: "_donations" }),
-        React.createElement("input", { type: "hidden", name: "business", value: "X7VSXQ32CJLK2" }),
-        React.createElement("input", { type: "hidden", name: "currency_code", value: "USD" }),
-        React.createElement("input", { type: "image", id: "donateButton", src: "https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif", border: "0", name: "submit", title: "PayPal - The safer, easier way to pay online!",
-            alt: "Donate with PayPal button" })
+        "div",
+        null,
+        React.createElement(
+            "h2",
+            null,
+            " Thanks you for supporting us"
+        ),
+        React.createElement(
+            "p",
+            null,
+            " You have already supported us by becoming a premium user. If you would like to support this website more you can donate to help improve the website."
+        ),
+        React.createElement(
+            "form",
+            { action: "https://www.paypal.com/cgi-bin/webscr", method: "post", "class": "donate", target: "_blank", id: "PaymentButton" },
+            React.createElement("input", { type: "hidden", name: "cmd", value: "_donations" }),
+            React.createElement("input", { type: "hidden", name: "business", value: "X7VSXQ32CJLK2" }),
+            React.createElement("input", { type: "hidden", name: "currency_code", value: "USD" }),
+            React.createElement("input", { type: "image", id: "donateButton", src: "https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif", border: "0", name: "submit", title: "PayPal - The safer, easier way to pay online!",
+                alt: "Donate with PayPal button" })
+        )
     ), document.querySelector("#domos"));
-
-    document.getElementById('PaymentButton').onclick = function () {
-        getToken(setPremiumUser);
-    };
 };
 
+//searches through created games with several queries
+var searchForGames = function searchForGames(e) {
+    e.preventDefault();
+
+    //If the min questions is more than the max questions print an error and return
+    if (document.getElementById("minQuestions").value > document.getElementById("maxQuestions").value && document.getElementById("maxQuestions").value > -1) {
+        alert("Min questions must be less than max questions");
+    }
+    //otherwise search for games with the specified chriteria
+    else {
+            sendAjax('GET', '/searchGames', $("#searchForm").serialize(), function (data) {
+                if (document.querySelector('#loadMore') !== null) {
+                    document.querySelector('#loadMore').style.display = "none";
+                }
+
+                ReactDOM.render(React.createElement(
+                    "div",
+                    null,
+                    React.createElement(SearchMenu, { csrf: Session_csrf }),
+                    React.createElement(
+                        "h3",
+                        null,
+                        " ",
+                        data.game.length,
+                        " Quizes Found "
+                    ),
+                    React.createElement(ViewList, { id: "gameViews", csrf: Session_csrf, games: data.game })
+                ), document.querySelector("#domos"));
+            });
+        }
+};
+
+//creates the form to search for questions
 var SearchMenu = function SearchMenu(props) {
-    console.log('testss');
+
     return React.createElement(
-        "form",
-        { id: "searchForm" },
+        "div",
+        { id: "searchDiv" },
         React.createElement(
-            "label",
-            { htmlFor: "quizName" },
-            " Quiz Name: "
+            "h2",
+            null,
+            " Quiz Search "
         ),
-        React.createElement("input", { type: "textarea", name: "quizName" }),
-        React.createElement("br", null),
         React.createElement(
-            "label",
-            { htmlFor: "userName" },
-            " User name: "
-        ),
-        React.createElement("input", { type: "textarea", name: "userName" }),
-        React.createElement("br", null),
-        React.createElement(
-            "label",
-            { htmlFor: "maxAttempts" },
-            " max number of attemps: "
-        ),
-        React.createElement("input", { type: "number", name: "maxAttempts", min: "-1", max: "10", defaultValue: "-1" }),
-        React.createElement("br", null),
-        React.createElement(
-            "label",
-            { htmlFor: "maxQuestions" },
-            " max number of Questions: "
-        ),
-        React.createElement("input", { type: "number", name: "maxQuestions", min: "-1", defaultValue: "-1" }),
-        React.createElement("br", null),
-        React.createElement(
-            "label",
-            { htmlFor: "minQuestions" },
-            " min number of Questions: "
-        ),
-        React.createElement("input", { type: "number", name: "minQuestions", min: "1", defaultValue: "1" }),
-        React.createElement("br", null),
-        React.createElement(
-            "button",
-            { id: "querySearch" },
-            " Search "
+            "form",
+            { id: "searchForm",
+                onSubmit: searchForGames
+            },
+            React.createElement(
+                "label",
+                { htmlFor: "quizName" },
+                " Quiz Name: "
+            ),
+            React.createElement("input", { type: "textarea", name: "quizName" }),
+            React.createElement("br", null),
+            React.createElement(
+                "label",
+                { htmlFor: "userName" },
+                " User name: "
+            ),
+            React.createElement("input", { type: "textarea", name: "userName" }),
+            React.createElement("br", null),
+            React.createElement(
+                "label",
+                { htmlFor: "maxAttempts" },
+                " max number of attemps: "
+            ),
+            React.createElement("input", { type: "number", id: "maxAttempts", name: "maxAttempts", min: "-1", max: "10", defaultValue: "-1" }),
+            React.createElement("br", null),
+            React.createElement(
+                "label",
+                { htmlFor: "maxQuestions" },
+                " max number of Questions: "
+            ),
+            React.createElement("input", { type: "number", id: "maxQuestions", name: "maxQuestions", min: "-1", defaultValue: "-1" }),
+            React.createElement("br", null),
+            React.createElement(
+                "label",
+                { htmlFor: "minQuestions" },
+                " min number of Questions: "
+            ),
+            React.createElement("input", { type: "number", id: "minQuestions", name: "minQuestions", min: "1", defaultValue: "1" }),
+            React.createElement("br", null),
+            React.createElement("input", { type: "submit" })
         )
+    );
+};
+
+//renders the maker link in the header
+var MakerNav = function MakerNav(props) {
+    return React.createElement(
+        "a",
+        { id: "makerNav", onClick: function onClick() {
+                return showMaker(props.csrf);
+            } },
+        " Make a new Quiz "
     );
 };
 
 //run on init
 var setup = function setup(csrf) {
 
-    ReactDOM.render(React.createElement(MenuUI, { csrf: csrf }), document.querySelector("#DisplayHead"));
+    ReactDOM.render(React.createElement(MakerNav, { csrf: csrf }), document.querySelector("#makerLink"));
 
     //get all quizes and display them
     sendAjax('GET', '/getUsername', null, function (data) {
@@ -1067,7 +1145,7 @@ var setup = function setup(csrf) {
 
 var getToken = function getToken(callback) {
     sendAjax('GET', '/getToken', null, function (result) {
-
+        Session_csrf = result.csrfToken;
         return callback(result.csrfToken);
     });
 };
@@ -1090,7 +1168,6 @@ var redirect = function redirect(response) {
 };
 
 var sendAjax = function sendAjax(type, action, data, success) {
-
     $.ajax({
         cache: false,
         type: type,

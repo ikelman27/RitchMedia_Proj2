@@ -146,9 +146,68 @@ GameSchema.statics.getAllAttemtps = (id, callback) =>
   GameModel.findById(id, 'attempts').exec(callback);
 
 
+  // searches for games that meet the query chriteria
+GameSchema.statics.getIntrosBySearch = (query, callback) => {
+  let attempts;
+  // if maxattemts is -1 aka infinite set it to the max safe intiger
+  if (query.maxAttempts < 1) {
+    attempts = Number.MAX_SAFE_INTEGER;
+  } else {
+    attempts = query.maxAttempts;
+  }
+  // do the same for questions
+  let maxQuestions;
+  if (query.maxQuestions < 1) {
+    maxQuestions = Number.MAX_SAFE_INTEGER;
+  } else {
+    maxQuestions = query.maxQuestions;
+  }
+
+
+  GameModel.aggregate([
+    // get the name length maxAttemts and creator of the quiz
+    {
+      $project: {
+        name: '$name',
+        length: {
+          $size: '$rounds',
+        },
+        maxAttempts: '$maxAttempts',
+        creator: '$creator',
+        creatorUsername: '$creatorUsername',
+      },
+    },
+
+    {
+      // only get quizes that have the name of the quiz in the title and creator,
+      // have less attempts than max attempts, and are within the range for the length
+      $match: {
+        name: {
+          $regex: query.quizName,
+          $options: 'i',
+        },
+        maxAttempts: {
+          $lt: Number(attempts),
+        },
+        length: {
+          $lte: Number(maxQuestions),
+          $gte: Number(query.minQuestions),
+        },
+        creatorUsername: {
+          $regex: query.userName,
+          $options: 'i',
+        },
+
+
+      },
+    },
+
+
+  ]).exec(callback);
+};
+
 // returns the name rounds and creator
 GameSchema.statics.getIntros = (index, callback) => {
-  console.log(index);
   GameModel.aggregate([{
     $project: {
       name: '$name',
@@ -156,6 +215,7 @@ GameSchema.statics.getIntros = (index, callback) => {
         $size: '$rounds',
       },
       creator: '$creator',
+      maxAttempts: '$maxAttempts',
       creatorUsername: '$creatorUsername',
     },
   },

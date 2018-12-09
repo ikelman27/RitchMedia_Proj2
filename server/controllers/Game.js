@@ -247,6 +247,16 @@ const checkAnswers = (req, res) => {
   });
 };
 
+// searches for a game and returns one
+const searchGames = (req, res) => {
+  Game.GameModel.getIntrosBySearch(req.query, (err, docs) => {
+    const game = docs;
+    return res.json({
+      game,
+    });
+  });
+};
+
 // display all games by their intro aka name question length and title
 const listGames = (req, res) => {
   const index = parseInt(req.query.startIndex, 10);
@@ -262,7 +272,6 @@ const listGames = (req, res) => {
 // gets all the data for a users games
 const getGame = (req, res) => Game.GameModel.findByOwner(req.session.account._id, (err, docs) => {
   if (err) {
-    console.log(err);
     return res.status(400).json({
       error: 'An error occured',
     });
@@ -273,6 +282,7 @@ const getGame = (req, res) => Game.GameModel.findByOwner(req.session.account._id
   });
 });
 
+module.exports.searchGames = searchGames;
 module.exports.makerPage = makerPage;
 module.exports.updateScore = updateScore;
 module.exports.updateGame = updateGame;
